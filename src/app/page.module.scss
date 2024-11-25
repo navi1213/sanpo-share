@@ -1,0 +1,123 @@
+.Header {
+    position: absolute;
+    z-index: 100;
+    margin: 0 auto;
+    width: 1020px;
+    display: flex;
+    justify-content: space-between;
+    &_title {
+      font-size: 24px;
+      font-weight: bold;
+      color: white;
+      margin-left: 580px;
+      margin-top: 150px;
+    }
+  }
+  
+  .Navigation {
+    background-color: white;
+    color: white;
+    &_wrapper {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 20px;
+      height: 45px;
+      width: 60%;
+      margin: 0 auto;
+    }
+  
+    &_logo {
+      display: inline-block;
+      font-size: 20px;
+      color: white;
+      line-height: 18px;
+      width: 60%;
+    }
+  
+    &_search {
+      width: 200px;
+      height: 20px;
+      display: block;
+    }
+  
+    &_login {
+      font-size: 16px;
+      line-height: 18px;
+      width: 100%;
+      text-decoration: none;
+      color: white;
+    }
+  }
+  
+  .Top {
+    &_headImage {
+      z-index: 1;
+      position: relative;
+      width: 100%;
+    }
+  
+    &_heading {
+      font-size: 24px;
+      font-weight: bold;
+      margin-left: 240px;
+    }
+  }
+  
+  .campCard {
+    $service-size: 4px;
+    $card-max-width: 210px;
+  
+    &_wrapper {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background-color: #d9d9d9;
+      gap: $service-size * 6;
+      width: 60%;
+      height: 210px;
+      margin: 0 auto;
+    }
+  
+    &_campName {
+      margin-top: $service-size * 5;
+      font-size: $service-size * 5;
+      font-weight: bold;
+      line-height: 18px;
+    }
+  
+    &_additionalInfo {
+      display: flex;
+      flex-direction: column;
+      height: 210px;
+    }
+  
+    &_detailInfo {
+      margin-left: 0;
+    }
+  
+    &_explanation {
+      font-size: $service-size * 3;
+      margin: $service-size * 4 0 0;
+  
+      &:not(:first-child) {
+        margin-top: 0;
+      }
+    }
+  
+    &_address {
+      margin: $service-size * 6 0 0;
+      font-size: $service-size * 3;
+    }
+  
+    &_link {
+      display: inline-block;
+      margin-top: $service-size * 4;
+      text-decoration: none;
+      color: white;
+      font-size: $service-size * 3;
+      background-color: #3149e2;
+      padding: $service-size * 2 $service-size * 5;
+      border-radius: $service-size;
+    }
+  }
