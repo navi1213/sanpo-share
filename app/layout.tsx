@@ -3,7 +3,11 @@ import { Noto_Sans_JP } from "next/font/google";
 import { cn } from "@/lib/utils";
 import "./globals.css";
 import { auth } from "@/auth";
+<<<<<<< HEAD
 import { Toaster } from "@/components/ui/toaster";
+=======
+import LogoutButton from "./(logged-in)/logout-button";
+>>>>>>> 03bf1a321dad9fe1d55e22029f12345d06738c11
 
 const fontNotoSansJP = Noto_Sans_JP({ subsets: ["latin"] });
 

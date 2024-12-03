@@ -23,11 +23,18 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { registerUser } from "./actions";
 import Link from "next/link";
+<<<<<<< HEAD
 import { emailSchema } from "@/validation/emailSchema";
 
 const formSchema = z
   .object({
     email: emailSchema,
+=======
+
+const formSchema = z
+  .object({
+    email: z.string().email(),
+>>>>>>> 03bf1a321dad9fe1d55e22029f12345d06738c11
   })
   .and(passwordMatchSchema);
 export default function Register() {
@@ -123,7 +130,11 @@ export default function Register() {
             </Form>
           </CardContent>
           <CardFooter className="flex-col gap-2">
+<<<<<<< HEAD
           <div className="text-muted-foreground text-xs">
+=======
+          <div className="text-muted-foreground text-sm">
+>>>>>>> 03bf1a321dad9fe1d55e22029f12345d06738c11
             すでにアカウントを持っていますか？{" "}
             <Link href="/login" className="underline">
               ログインする
