@@ -40,8 +40,10 @@ export const registerUser = async ({
     email,
     password:hashedPassword,
   })
-}catch(e:any) {
-    if(e.code === "23505") {
+}catch(e:unknown) {
+  if (e instanceof Error && "code" in e) {
+    const code = (e as any).code;
+    if(code === "23505") {
         return {
             error:true,
             message:"このメールアドレスで登録されたアカウントがすでに存在します。"
@@ -51,5 +53,6 @@ export const registerUser = async ({
         error:true,
         message:"エラーが発生しました"
     }
+}
 }
 };

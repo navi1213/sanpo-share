@@ -30,7 +30,7 @@ export const loginWithCredential = async ({
         password,
         redirect:false
     });
-  }catch(e) {
+  }catch(e:unknown) {
     return {
       error:true,
       message:"メールアドレスまたはパスワードが間違ってます"
