@@ -4,7 +4,6 @@ import { passwordResetTokens } from "@/db/passwordResetTokensSchema";
 import { eq } from "drizzle-orm";
 import Link from "next/link";
 import UpdatePasswordForm from "./update-password-form";
-import { useForm } from "react-hook-form";
 
 export default async function UpdatePassword({
   searchParams,
