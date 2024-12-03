@@ -42,8 +42,13 @@ export const registerUser = async ({
   })
 }catch (e: unknown) {
   if (e instanceof Error) {
-    // "code" プロパティがある場合
-    if ("code" in e && typeof (e as any).code === "string") {
+    // "code" プロパティがあるか確認
+    if (
+      typeof e === "object" &&
+      e !== null &&
+      "code" in e &&
+      typeof (e as { code: unknown }).code === "string"
+    ) {
       const code = (e as { code: string }).code;
       if (code === "23505") {
         return {
