@@ -7,7 +7,6 @@ import db from "@/db/drizzle";
 import { users } from "@/db/usersSchema";
 import { eq } from "drizzle-orm";
 import { compare } from "bcryptjs";
-import { AuthError } from "@/utils/error";
 export const loginWithCredential = async ({
   email,
   password,

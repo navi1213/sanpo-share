@@ -5,7 +5,6 @@ import { users } from "./db/usersSchema";
 import { eq } from "drizzle-orm";
 import { compare } from "bcryptjs";
 import { authenticator } from "otplib";
-import { AuthError } from "@/utils/error";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   callbacks: {
@@ -36,14 +35,14 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           .where(eq(users.email, credentials.email as string));
         // ユーザーが見つからなかった場合
         if (!user) {
-          throw new AuthError("USER_NOT_FOUND", "メールアドレスで登録されたアカウントが存在しません");
+          throw new Error("メールアドレスで登録されたアカウントが存在しません");
         } else {
           const passwordCorrect = await compare(
             credentials.password as string,
             user.password!
           );
           if (!passwordCorrect) {
-            throw new AuthError("INVALID_PASSWORD", "メールアドレスまたはパスワードが間違っています");
+            throw new Error("メールアドレスまたはパスワードが間違っています");
           }
           if (user.twoFactorActivated) {
             const tokenValid = authenticator.check(
@@ -51,7 +50,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
               user.twoFactorSecret ?? ""
             );
             if (!tokenValid) {
-              throw new AuthError("INVALID_2FA", "ワンタイムパスワードが間違っています")
+              throw new Error("ワンタイムパスワードが間違っています");
             }
           }
         }
