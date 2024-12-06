@@ -3,12 +3,19 @@
 import { z } from "zod";
 import { passwordSchema } from "@/validation/passwordSchema";
 import { signIn } from "@/auth";
+import db from "@/db/drizzle";
+import { users } from "@/db/usersSchema";
+import { eq } from "drizzle-orm";
+import { compare } from "bcryptjs";
+import { AuthError } from "@/utils/error";
 export const loginWithCredential = async ({
   email,
   password,
+  token,
 }: {
   email: string;
   password: string;
+  token?: string;
 }) => {
   const loginSchema = z.object({
     email: z.string().email("正しい形式のメールアドレスを入力してください"),
@@ -16,25 +23,70 @@ export const loginWithCredential = async ({
   });
   // safeParse は、データを検証し、期待通りのデータであればそのデータを返します。そうでなければ、エラーメッセージを出力します。
   const loginValidation = loginSchema.safeParse({
-    email,password
+    email,
+    password,
   });
-  if(!loginValidation.success) {
+  if (!loginValidation.success) {
     return {
-        error:true,
-        message:loginValidation.error?.issues[0]?.message ?? "エラーが発生しました",
-    }
-  };
+      error: true,
+      message:
+        loginValidation.error?.issues[0]?.message ?? "エラーが発生しました",
+    };
+  }
   try {
-    await signIn("credentials",{
-        email,
-        password,
-        redirect:false
+    await signIn("credentials", {
+      email,
+      password,
+      token,
+      redirect: false,
     });
-  }catch {
-    return {
-      error:true,
-      message:"メールアドレスまたはパスワードが間違ってます"
+  } catch (error) {
+    if (error instanceof Error) {
+
+      // ネストされたエラー（causeを確認）
+      const errorCause = (error as any).cause;
+      let detailedMessage = "不明なエラーが発生しました";
+
+      // エラーがさらにネストされている場合の処理
+      if (errorCause && typeof errorCause === "object" && errorCause.err) {
+        const nestedError = errorCause.err;
+        if (nestedError instanceof Error) {
+          detailedMessage = nestedError.message; // 詳細なエラーメッセージを取得
+        }
+      }
+      return {
+        error: true,
+        message: detailedMessage,
+      };
     }
   }
+};
 
+export const preLoginCheck = async ({
+  email,
+  password,
+}: {
+  email: string;
+  password: string;
+}) => {
+  const [user] = await db.select().from(users).where(eq(users.email, email));
+
+  // ユーザーが見つからなかった場合
+  if (!user) {
+    return {
+      error: true,
+      message: "パスワードまたはメールアドレスが間違ってます",
+    };
+  } else {
+    const passwordCorrect = await compare(password, user.password!);
+    if (!passwordCorrect) {
+      return {
+        error: true,
+        message: "パスワードまたはメールアドレスが間違ってます",
+      };
+    }
+  }
+  return {
+    twoFactorActivated: user.twoFactorActivated,
+  };
 };
