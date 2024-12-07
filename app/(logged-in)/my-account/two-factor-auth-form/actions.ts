@@ -28,7 +28,7 @@ export const get2faSecret = async () => {
       message: "ユーザーが見つかりませんでした",
     };
   }
-  let twoFactorSecret = user.twoFactorSecret ?? "";
+  const twoFactorSecret = user.twoFactorSecret ?? "";
   //ユーザーに二段階認証の秘密鍵がなければ生成してDBに保存
   if (!twoFactorSecret) {
     const twoFactorSecret = authenticator.generateSecret();

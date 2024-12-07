@@ -7,6 +7,7 @@ import db from "@/db/drizzle";
 import { users } from "@/db/usersSchema";
 import { eq } from "drizzle-orm";
 import { compare } from "bcryptjs";
+import { CustomError } from "@/types";
 export const loginWithCredential = async ({
   email,
   password,
@@ -41,18 +42,15 @@ export const loginWithCredential = async ({
     });
   } catch (error) {
     if (error instanceof Error) {
-
-      // ネストされたエラー（causeを確認）
-      const errorCause = (error as any).cause;
+      const customError = error as CustomError;
+    
       let detailedMessage = "不明なエラーが発生しました";
-
-      // エラーがさらにネストされている場合の処理
-      if (errorCause && typeof errorCause === "object" && errorCause.err) {
-        const nestedError = errorCause.err;
-        if (nestedError instanceof Error) {
-          detailedMessage = nestedError.message; // 詳細なエラーメッセージを取得
-        }
+    
+      // ネストされたエラー（causeを確認）
+      if (customError.cause?.err instanceof Error) {
+        detailedMessage = customError.cause.err.message; // 詳細なエラーメッセージを取得
       }
+    
       return {
         error: true,
         message: detailedMessage,
