@@ -4,16 +4,17 @@ import db from "./db/drizzle";
 import { users } from "./db/usersSchema";
 import { eq } from "drizzle-orm";
 import { compare } from "bcryptjs";
+import { authenticator } from "otplib";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   callbacks: {
-    jwt({token,user}) {
-      if(user) {
-        token.id = user.id
+    jwt({ token, user }) {
+      if (user) {
+        token.id = user.id;
       }
       return token;
     },
-    session({session,token}) {
+    session({ session, token }) {
       session.user.id = token.id as string;
       return session;
     },
@@ -23,6 +24,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       credentials: {
         email: {},
         password: {},
+        token: {},
       },
       // ログインのロジックを定義
       async authorize(credentials) {
@@ -31,7 +33,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           .select()
           .from(users)
           .where(eq(users.email, credentials.email as string));
-
         // ユーザーが見つからなかった場合
         if (!user) {
           throw new Error("メールアドレスで登録されたアカウントが存在しません");
@@ -41,7 +42,16 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             user.password!
           );
           if (!passwordCorrect) {
-            throw new Error("パスワードが間違っています");
+            throw new Error("メールアドレスまたはパスワードが間違っています");
+          }
+          if (user.twoFactorActivated) {
+            const tokenValid = authenticator.check(
+              credentials.token as string,
+              user.twoFactorSecret ?? ""
+            );
+            if (!tokenValid) {
+              throw new Error("ワンタイムパスワードが間違っています");
+            }
           }
         }
 

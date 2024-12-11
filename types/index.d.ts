@@ -8,3 +8,8 @@ export type SiteConfig = {
         github:string;
     };
 };
+export interface CustomError extends Error {
+  cause?: {
+    err?: Error;
+  };
+}
