@@ -50,7 +50,6 @@ export default function Register() {
         message: response?.message,
       });
     }
-    // console.log(response);
   };
   return (
     <main className="flex justify-center items-center min-h-screen">

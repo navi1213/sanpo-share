@@ -2,7 +2,6 @@ import Link from "next/link";
 import LogoutButton from "./logout-button";
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
-
 export default async function LoggedInLayout({
   children,
 }: {
