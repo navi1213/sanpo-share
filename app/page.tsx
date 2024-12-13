@@ -3,7 +3,7 @@ import Header from "@/components/header";
 import HeroSection from "@/components/heroSection";
 
 
-export default function Home() {
+export default async function Home() {
   return (
     <>
     <div>

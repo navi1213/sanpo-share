@@ -1,27 +1,25 @@
 "use server";
 import db from "@/db/drizzle";
-import { passwordMatchSchema } from "@/validation/passwordMatchSchema";
-import { z } from "zod";
 import { hash } from "bcryptjs";
 import { users } from "@/db/schema";
+import { userSchema } from "@/validation/userSchema";
 export const registerUser = async ({
   email,
+  username,
   password,
   passwordConfirm,
 }: {
   email: string;
+  username:string;
   password: string;
   passwordConfirm: string;
 }) => {
   try {
-    const newUserSchema = z
-      .object({
-        email: z.string().email(),
-      })
-      .and(passwordMatchSchema);
+    const newUserSchema = userSchema;
 
     const newUserValidation = newUserSchema.safeParse({
       email,
+      username,
       password,
       passwordConfirm,
     });
@@ -36,6 +34,7 @@ export const registerUser = async ({
 
     await db.insert(users).values({
       email,
+      username,
       password: hashedPassword,
     });
   } catch (e: unknown) {
@@ -52,7 +51,7 @@ export const registerUser = async ({
           return {
             error: true,
             message:
-              "このメールアドレスで登録されたアカウントがすでに存在します。",
+              "このメールアドレスもしくはユーザー名で登録されたアカウントがすでに存在します。",
           };
         }
       }

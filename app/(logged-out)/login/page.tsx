@@ -22,7 +22,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { loginWithCredential, preLoginCheck } from "./actions";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { emailSchema } from "@/validation/emailSchema";
 import { useState } from "react";
@@ -33,6 +33,7 @@ import {
   InputOTPSlot,
 } from "@/components/ui/input-otp";
 import { useToast } from "@/hooks/use-toast";
+import { useSession } from "next-auth/react";
 
 const formSchema = z.object({
   email: emailSchema,
@@ -44,6 +45,9 @@ export default function Login() {
   const [step, setStep] = useState(1);
   const [otp, setOtp] = useState("");
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectUrl = searchParams.get("redirect") || "/";
+  const {data:session,update} = useSession();
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -75,7 +79,8 @@ export default function Login() {
           message: response.message,
         });
       } else {
-        router.push("/my-account");
+        router.push(redirectUrl as string);
+        update();
       }
     }
   };
@@ -91,11 +96,12 @@ export default function Login() {
     });
     if (response?.error) {
       toast({
-        title:response.message,
-        variant:"destructive",
-      })
+        title: response.message,
+        variant: "destructive",
+      });
     } else {
-      router.push("/my-account");
+      router.push(redirectUrl as string);
+      update();
     }
   };
   return (

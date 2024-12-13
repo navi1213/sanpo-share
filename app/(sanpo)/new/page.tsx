@@ -57,7 +57,6 @@ export default function New() {
       location: data.location,
       path: coordinates as { lat: number; lng: number }[],
     });
-
     if (response?.error) {
       // エラー処理
       form.setError("root", {

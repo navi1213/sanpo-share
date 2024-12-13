@@ -1,4 +1,5 @@
 import { auth } from "@/auth";
+import Header from "@/components/header";
 import { redirect } from "next/navigation";
 
 export default async function LoggedOutLayout({children}:{children:React.ReactNode}) {
@@ -6,5 +7,10 @@ export default async function LoggedOutLayout({children}:{children:React.ReactNo
     if(!!session?.user?.id) {
         redirect("/my-account")
     }
-    return children;
+    return <>
+    <div className="min-h-screen flex flex-col">
+        <Header/>
+      {children}
+    </div>
+  </>
 }

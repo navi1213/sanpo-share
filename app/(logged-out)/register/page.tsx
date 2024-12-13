@@ -17,24 +17,20 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { passwordMatchSchema } from "@/validation/passwordMatchSchema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { registerUser } from "./actions";
 import Link from "next/link";
-import { emailSchema } from "@/validation/emailSchema";
+import { userSchema } from "@/validation/userSchema";
 
-const formSchema = z
-  .object({
-    email: emailSchema,
-  })
-  .and(passwordMatchSchema);
+const formSchema = userSchema;
 export default function Register() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       email: "",
+      username:"",
       password: "",
       passwordConfirm: "",
     },
@@ -42,6 +38,7 @@ export default function Register() {
   const handleSubmit = async (data: z.infer<typeof formSchema>) => {
     const response = await registerUser({
       email: data.email,
+      username:data.username,
       password: data.password,
       passwordConfirm: data.passwordConfirm,
     });
@@ -77,6 +74,19 @@ export default function Register() {
                   disabled={form.formState.isSubmitting}
                   className="flex flex-col gap-2"
                 >
+                  <FormField
+                    control={form.control}
+                    name={"username"}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>ユーザー名</FormLabel>
+                        <FormControl>
+                          <Input {...field} type="text" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                   <FormField
                     control={form.control}
                     name={"email"}

@@ -2,12 +2,18 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Menu, Search, Upload, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-
+import { signOut, useSession } from "next-auth/react";
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-
+  const { data: session, update } = useSession();
+  const handleLogout = async () => {
+    await signOut();
+    await update();
+  };
+  const currentPath = usePathname();
   return (
     <header className="sticky top-0 z-50 w-full bg-black text-white">
       <div className="container mx-auto px-4">
@@ -16,7 +22,6 @@ export default function Header() {
           <Link href="/" className="flex items-center space-x-2">
             <span className="text-xl font-bold">散歩シェア</span>
           </Link>
-
           {/* Desktop Navigation */}
           <nav className="hidden xl:flex items-center space-x-6 ml-6">
             <Link
@@ -26,10 +31,10 @@ export default function Header() {
               ホーム
             </Link>
             <Link
-              href="/search"
+              href="/routes"
               className="text-sm hover:text-gray-300 transition-colors"
             >
-              検索
+              ルート一覧
             </Link>
             <Link
               href="/new"
@@ -41,19 +46,27 @@ export default function Header() {
 
           {/* Desktop Auth Buttons */}
           <div className="hidden xl:flex items-center space-x-4 ml-auto">
-            <Link href="/login">
-              <Button
-                variant="ghost"
-                className="text-white hover:text-gray-300"
-              >
-                ログイン
+            {session ? (
+              <Button size="sm" onClick={handleLogout}>
+                ログアウト
               </Button>
-            </Link>
-            <Link href="/register">
-              <Button className="bg-white text-black hover:bg-gray-200">
-                メンバー登録
-              </Button>
-            </Link>
+            ) : (
+              <>
+                <Link href={`/login?redirect=${encodeURI(currentPath)}`}>
+                  <Button
+                    variant="ghost"
+                    className="text-white hover:text-gray-300"
+                  >
+                    ログイン
+                  </Button>
+                </Link>
+                <Link href={`/register?redirect=${encodeURI(currentPath)}`}>
+                  <Button className="bg-white text-black hover:bg-gray-200">
+                    メンバー登録
+                  </Button>
+                </Link>
+              </>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -88,7 +101,7 @@ export default function Header() {
                 onClick={() => setIsMenuOpen(false)}
               >
                 <Search className="h-4 w-4" />
-                <span>検索</span>
+                <span>ルート一覧</span>
               </Link>
               <Link
                 href="/new"
@@ -99,19 +112,27 @@ export default function Header() {
                 <span>投稿</span>
               </Link>
               <div className="flex flex-col space-y-2 pt-4 border-t border-gray-800">
-                <Link href="/login">
-                <Button
-                  variant="ghost"
-                  className="justify-start text-white hover:text-gray-300"
-                >
-                  ログイン
-                </Button>
-                </Link>
-                <Link href="/register">
-                  <Button className="bg-white text-black hover:bg-gray-200">
-                    メンバー登録
+                {session ? (
+                  <Button size="sm" onClick={handleLogout}>
+                    ログアウト
                   </Button>
-                </Link>
+                ) : (
+                  <>
+                    <Link href={`/login?redirect=${encodeURI(currentPath)}`}>
+                      <Button
+                        variant="ghost"
+                        className="justify-start text-white hover:text-gray-300"
+                      >
+                        ログイン
+                      </Button>
+                    </Link>
+                    <Link href={`/register?redirect=${encodeURI(currentPath)}`}>
+                      <Button className="bg-white text-black hover:bg-gray-200">
+                        メンバー登録
+                      </Button>
+                    </Link>
+                  </>
+                )}
               </div>
             </nav>
           </div>
