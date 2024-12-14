@@ -47,6 +47,7 @@ export default function Login() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectUrl = searchParams.get("redirect") || "/";
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const {data:_session,update} = useSession();
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),

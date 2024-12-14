@@ -30,7 +30,7 @@ export default function MapWithDrawing({
     lng: 139.7048587992674,
   });
   const searchBoxRef = useRef<HTMLInputElement | null>(null); // Autocompleteの参照
-  const memoizedOnCoordinatesChange = useCallback(onCoordinatesChange, []);
+  const memoizedOnCoordinatesChange = useCallback(onCoordinatesChange, [onCoordinatesChange]);
   useEffect(() => {
     if (mapInstance) {
       const manager = new google.maps.drawing.DrawingManager({
