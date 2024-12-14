@@ -2,7 +2,6 @@
 
 import {
   GoogleMap,
-  Marker,
   Polyline,
   useLoadScript,
 } from "@react-google-maps/api";
@@ -70,22 +69,6 @@ export default function RouteMap({
       zoom={17}
     >
       <CustomMarker coordinate={startMarker} name="スタート" />
-      {/* スタート地点のピン */}
-      {/* {startMarker && (
-        <Marker
-          position={startMarker}
-          label={{
-            text: "スタート",
-            color: "black",
-            fontSize: "14px",
-            fontWeight: "bold",
-            
-          }}
-          icon={{
-            url: "http://maps.google.com/mapfiles/ms/icons/green-dot.png",
-          }}
-        />
-      )} */}
 
       {/* ゴール地点のピン */}
       {endMarker && (
@@ -94,18 +77,6 @@ export default function RouteMap({
           name="ゴール"
         />
 
-        // <Marker
-        //   position={adjustedEndMarker || endMarker}
-        //   label={{
-        //     text: "ゴール",
-        //     color: "black",
-        //     fontSize: "14px",
-        //     fontWeight: "bold",
-        //   }}
-        //   icon={{
-        //     url: "http://maps.google.com/mapfiles/ms/icons/red-dot.png",
-        //   }}
-        // />
       )}
 
       {/* ルートのポリライン */}

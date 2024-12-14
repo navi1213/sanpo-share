@@ -15,7 +15,7 @@ export default async function MyAccount() {
   const [user] = await db.select({
     twoFactorActivated: users.twoFactorActivated,
     //(logged-in)/layout.tsxにセッションがなければloginに飛ばす処理を書いてるのでsession?.user?.id!としている。
-  }).from(users).where(eq(users.id,parseInt(session?.user?.id!)));
+  }).from(users).where(eq(users.id,parseInt(session.user.id)));
 
   return (
     <Card className="w-[350px]">

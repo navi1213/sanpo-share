@@ -22,11 +22,6 @@ export default function New() {
   const [coordinates, setCoordinates] = useState<
     { lat: number; lng: number }[]
   >([]);
-  const [address, setAddress] = useState<string>("");
-  const [center, setCenter] = useState<{ lat: number; lng: number }>({
-    lat: null,
-    lng: null,
-  });
   const handleCoordinatesUpdate = (
     newCoordinates: { lat: number; lng: number }[]
   ) => {

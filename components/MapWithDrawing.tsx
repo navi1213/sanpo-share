@@ -1,7 +1,7 @@
 "use client";
 
 import { useLoadScript, GoogleMap, Libraries } from "@react-google-maps/api";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 
 const containerStyle = {
   width: "100%",
@@ -30,7 +30,7 @@ export default function MapWithDrawing({
     lng: 139.7048587992674,
   });
   const searchBoxRef = useRef<HTMLInputElement | null>(null); // Autocompleteの参照
-
+  const memoizedOnCoordinatesChange = useCallback(onCoordinatesChange, []);
   useEffect(() => {
     if (mapInstance) {
       const manager = new google.maps.drawing.DrawingManager({
@@ -59,7 +59,7 @@ export default function MapWithDrawing({
             const point = path.getAt(i);
             coordinates.push({ lat: point.lat(), lng: point.lng() });
           }
-          onCoordinatesChange(coordinates);
+          memoizedOnCoordinatesChange(coordinates); // メモ化された関数を呼び出す
           manager.setDrawingMode(null);
         }
       );
@@ -68,7 +68,7 @@ export default function MapWithDrawing({
 
       return () => manager.setMap(null);
     }
-  }, [mapInstance]);
+  }, [mapInstance,memoizedOnCoordinatesChange]);
 
   // 描画中の線をキャンセル
   const handleCancelDrawing = () => {

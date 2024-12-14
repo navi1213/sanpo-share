@@ -6,10 +6,7 @@ type RouteProps = {
     id: string; // 動的ルートで渡される ID
   };
 };
-type Route = {
-    path: { lat: number; lng: number }[];
-  };
-  
+
 export default async function RouteDetail({ params }: RouteProps) {
   const route = await fetchRouteById(params.id); // ID を使ってデータを取得
   if (!route) {
@@ -18,7 +15,7 @@ export default async function RouteDetail({ params }: RouteProps) {
 
   return (
     <main className="flex flex-col items-center min-h-screen">
-        <RouteMap  path={route.path as { lat: number; lng: number }[] || []}/>
+      <RouteMap path={(route.path as { lat: number; lng: number }[]) || []} />
       <div className="w-[650px]">
         <h1 className="text-2xl font-bold">{route.name}</h1>
         <p className="text-gray-700">{route.description}</p>
