@@ -8,7 +8,7 @@ export const routes = pgTable("routes", {
   description: text("description"),
   location: text("location"),
   path: json("path").notNull(),
-  createdBy: integer("user_id").references(() => users.id, {
+  createdBy: text("user_name").references(() => users.username, {
     onDelete: "cascade",
   }),
 });

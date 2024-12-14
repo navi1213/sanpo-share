@@ -47,9 +47,19 @@ export default function Header() {
           {/* Desktop Auth Buttons */}
           <div className="hidden xl:flex items-center space-x-4 ml-auto">
             {session ? (
-              <Button size="sm" onClick={handleLogout}>
-                ログアウト
-              </Button>
+              <>
+                <Link href="/my-account">
+                  <Button
+                    variant="ghost"
+                    className="text-white hover:text-gray-300"
+                  >
+                    マイアカウント
+                  </Button>
+                </Link>
+                <Button size="sm" onClick={handleLogout}>
+                  ログアウト
+                </Button>
+              </>
             ) : (
               <>
                 <Link href={`/login?redirect=${encodeURI(currentPath)}`}>
@@ -96,7 +106,7 @@ export default function Header() {
                 <span>ホーム</span>
               </Link>
               <Link
-                href="/search"
+                href="/routes"
                 className="flex items-center space-x-2 text-sm hover:text-gray-300"
                 onClick={() => setIsMenuOpen(false)}
               >
@@ -113,9 +123,19 @@ export default function Header() {
               </Link>
               <div className="flex flex-col space-y-2 pt-4 border-t border-gray-800">
                 {session ? (
-                  <Button size="sm" onClick={handleLogout}>
-                    ログアウト
-                  </Button>
+                  <>
+                    <Button size="sm" onClick={handleLogout}>
+                      ログアウト
+                    </Button>
+                    <Link href="/my-account">
+                      <Button
+                        variant="ghost"
+                        className="text-white hover:text-gray-300"
+                      >
+                        マイアカウント
+                      </Button>
+                    </Link>
+                  </>
                 ) : (
                   <>
                     <Link href={`/login?redirect=${encodeURI(currentPath)}`}>

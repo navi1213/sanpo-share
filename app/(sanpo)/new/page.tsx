@@ -17,10 +17,16 @@ import { Button } from "@/components/ui/button";
 import { registerRoute } from "./actions"; // サーバー側処理をインポート
 import { useToast } from "@/hooks/use-toast";
 import { useForm } from "react-hook-form";
+import { Textarea } from "@/components/ui/textarea";
 export default function New() {
   const [coordinates, setCoordinates] = useState<
     { lat: number; lng: number }[]
   >([]);
+  const [address, setAddress] = useState<string>("");
+  const [center, setCenter] = useState<{ lat: number; lng: number }>({
+    lat: null,
+    lng: null,
+  });
   const handleCoordinatesUpdate = (
     newCoordinates: { lat: number; lng: number }[]
   ) => {
@@ -40,6 +46,9 @@ export default function New() {
     location: z.string().min(1, "場所情報は必須です"),
     path: z.array(coordinateSchema).min(1, "少なくとも1つの座標が必要です"),
   });
+  /**
+   *
+   */
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -49,6 +58,7 @@ export default function New() {
       path: coordinates.length > 0 ? coordinates : [{ lat: 0, lng: 0 }],
     },
   });
+
   const handleSubmit = async (data: z.infer<typeof formSchema>) => {
     // サーバー側にデータを送信
     const response = await registerRoute({
@@ -69,27 +79,30 @@ export default function New() {
         description: "散歩ルートが正常に登録されました",
         className: "bg-green-500 text-white",
       });
-      setCoordinates([])
+      setCoordinates([]);
       form.reset(); // フォームのリセット
     }
   };
+  
+
   return (
-    
     <div className="flex">
       <div className="w-1/2">
-        <MapWithDrawing onCoordinatesChange={handleCoordinatesUpdate} />
+        <MapWithDrawing
+          onCoordinatesChange={handleCoordinatesUpdate}
+        />
       </div>
       <div>
-      {coordinates.length !== 0 ? (
-        coordinates.map((c, index) => (
-          <div key={index}>
-            緯度: {c.lat}, 経度: {c.lng}
-          </div>
-        ))
-      ) : (
-        <div>座標がありません</div>
-      )}
-    </div>
+        {coordinates.length !== 0 ? (
+          coordinates.map((c, index) => (
+            <div key={index}>
+              緯度: {c.lat}, 経度: {c.lng}
+            </div>
+          ))
+        ) : (
+          <div>座標がありません</div>
+        )}
+      </div>
       <div className="w-1/2">
         <Card>
           <CardHeader>
@@ -125,7 +138,8 @@ export default function New() {
                       <FormItem>
                         <FormLabel>説明</FormLabel>
                         <FormControl>
-                          <Input {...field} type="text" />
+                          <Textarea {...field} />
+                          {/* <Input {...field} type="text" /> */}
                         </FormControl>
                         <FormMessage />
                       </FormItem>

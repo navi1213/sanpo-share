@@ -22,6 +22,9 @@ export default async function LoggedInLayout({
             <li>
               <Link href="/change-password">パスワードを変更</Link>
             </li>
+            <li>
+              <Link href="/">ホーム</Link>
+            </li>
           </ul>
           <div>
             <LogoutButton />

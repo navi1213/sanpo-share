@@ -2,7 +2,7 @@ import { boolean,pgTable, serial, text, timestamp } from "drizzle-orm/pg-core";
 
 export const users = pgTable("users",{
     id:serial("id").primaryKey(),
-    username:text("use_name").unique(),
+    username:text("user_name").unique(),
     email:text("email").unique(),
     password:text("password"),
     createdAt:timestamp("created_at").defaultNow(),

@@ -7,7 +7,7 @@ export default async function LoggedInLayout({
 }) {
   const session = await auth();
   if (!session?.user?.id) {
-    redirect("/login")
+    redirect("/login?redirect=/new")
   }
   return (
     <>

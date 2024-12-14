@@ -26,6 +26,7 @@ export const registerRoute = async ({
   const [user] = await db
     .select({
       id: users.id,
+      username:users.username
     })
     .from(users)
     .where(eq(users.email, session.user.email));
@@ -63,7 +64,7 @@ export const registerRoute = async ({
     }
     // データベースに挿入
     await db.insert(routes).values({
-      name,description,location,path:JSON.stringify(path),createdBy:user.id
+      name,description,location,path:JSON.stringify(path),createdBy:user.username
     }as RouteInsert);
 
     return { success: true, message: "ルートが作成されました" };
