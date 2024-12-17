@@ -10,11 +10,13 @@ export const registerRoute = async ({
   description,
   location,
   path,
+  distance
 }: {
   name: string;
   description: string;
   location: string;
   path: { lat: number; lng: number }[];
+  distance:string;
 }) => {
   const session = await auth();
   if (!session?.user?.id) {
@@ -64,7 +66,7 @@ export const registerRoute = async ({
     }
     // データベースに挿入
     await db.insert(routes).values({
-      name,description,location,path:JSON.stringify(path),createdBy:user.username
+      name,description,location,path:JSON.stringify(path),createdBy:user.username,distance
     }as RouteInsert);
 
     return { success: true, message: "ルートが作成されました" };

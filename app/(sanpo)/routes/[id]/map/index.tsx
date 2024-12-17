@@ -20,9 +20,10 @@ const containerStyle = {
 // };
 
 export default function RouteMap({
-  path,
+  path,distance
 }: {
   path: { lat: number; lng: number }[];
+  distance:string;
 }) {
   const center = path[0];
   const { isLoaded, loadError } = useLoadScript({
@@ -90,6 +91,9 @@ export default function RouteMap({
           }}
         />
       )}
+      <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-10 bg-white p-2 rounded shadow">
+      <strong>合計距離: {distance} km</strong>
+    </div>
     </GoogleMap>
   );
 }

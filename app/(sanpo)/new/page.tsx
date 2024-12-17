@@ -22,6 +22,7 @@ export default function New() {
   const [coordinates, setCoordinates] = useState<
     { lat: number; lng: number }[]
   >([]);
+  const [distance,setDistance] = useState(null);
   const handleCoordinatesUpdate = (
     newCoordinates: { lat: number; lng: number }[]
   ) => {
@@ -41,9 +42,6 @@ export default function New() {
     location: z.string().min(1, "場所情報は必須です"),
     path: z.array(coordinateSchema).min(1, "少なくとも1つの座標が必要です"),
   });
-  /**
-   *
-   */
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -61,6 +59,7 @@ export default function New() {
       description: data.description,
       location: data.location,
       path: coordinates as { lat: number; lng: number }[],
+      distance
     });
     if (response?.error) {
       // エラー処理
@@ -68,7 +67,6 @@ export default function New() {
         message: response.message,
       });
     } else {
-      console.log("正常に登録されました");
       toast({
         title: "ルートの登録",
         description: "散歩ルートが正常に登録されました",
@@ -81,92 +79,83 @@ export default function New() {
   
 
   return (
-    <div className="flex">
-      <div className="w-1/2">
-        <MapWithDrawing
-          onCoordinatesChange={handleCoordinatesUpdate}
-        />
-      </div>
-      <div>
-        {coordinates.length !== 0 ? (
-          coordinates.map((c, index) => (
-            <div key={index}>
-              緯度: {c.lat}, 経度: {c.lng}
-            </div>
-          ))
-        ) : (
-          <div>座標がありません</div>
-        )}
-      </div>
-      <div className="w-1/2">
-        <Card>
-          <CardHeader>
-            <CardTitle>新しい散歩ルートを作成</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(handleSubmit)}>
-                <fieldset
-                  className="flex flex-col gap-4"
-                  disabled={form.formState.isSubmitting}
-                >
-                  {/* ルート名 */}
-                  <FormField
-                    control={form.control}
-                    name={"name"}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>ルート名</FormLabel>
-                        <FormControl>
-                          <Input {...field} type="text" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  {/* 説明 */}
-                  <FormField
-                    control={form.control}
-                    name={"description"}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>説明</FormLabel>
-                        <FormControl>
-                          <Textarea {...field} />
-                          {/* <Input {...field} type="text" /> */}
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  {/* 場所情報 */}
-                  <FormField
-                    control={form.control}
-                    name={"location"}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>場所情報</FormLabel>
-                        <FormControl>
-                          <Input {...field} type="text" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  {!!form.formState.errors.root?.message && (
-                    <FormMessage>
-                      {form.formState.errors.root?.message}
-                    </FormMessage>
-                  )}
-                  <Button type="submit">ルートを登録</Button>
-                </fieldset>
-              </form>
-            </Form>
-          </CardContent>
-        </Card>
-      </div>
+    <div className="flex flex-col gap-4">
+    {/* 地図エリア */}
+    <div className="w-full h-[500px]">
+      <MapWithDrawing onCoordinatesChange={handleCoordinatesUpdate} onDistanceChange={setDistance}/>
     </div>
+
+    {/* フォームエリア */}
+    <div className="w-full">
+      <Card>
+        <CardHeader>
+          <CardTitle>新しい散歩ルートを作成</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(handleSubmit)}>
+              <fieldset
+                className="flex flex-col gap-4"
+                disabled={form.formState.isSubmitting}
+              >
+                {/* ルート名 */}
+                <FormField
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>ルート名</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* 説明 */}
+                <FormField
+                  control={form.control}
+                  name="description"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>説明</FormLabel>
+                      <FormControl>
+                        <Textarea {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* 場所情報 */}
+                <FormField
+                  control={form.control}
+                  name="location"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>場所情報</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {!!form.formState.errors.root?.message && (
+                  <FormMessage>
+                    {form.formState.errors.root?.message}
+                  </FormMessage>
+                )}
+
+                <Button type="submit">ルートを登録</Button>
+              </fieldset>
+            </form>
+          </Form>
+        </CardContent>
+      </Card>
+    </div>
+  </div>
   );
 }
