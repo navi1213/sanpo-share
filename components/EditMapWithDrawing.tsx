@@ -47,6 +47,7 @@ export default function EditMapWithDrawing({
     onCoordinatesChange,
   ]);
   const [initialLine, setInitialLine] = useState(initialCoordinates);
+
   useEffect(() => {
     if (mapInstance) {
       const manager = new google.maps.drawing.DrawingManager({
@@ -70,22 +71,35 @@ export default function EditMapWithDrawing({
           setPolylines((prev) => [...prev, polyline]);
 
           const path = polyline.getPath();
-          const coordinates: { lat: number; lng: number }[] = [];
+          const newCoordinates: { lat: number; lng: number }[] = [];
           for (let i = 0; i < path.getLength(); i++) {
             const point = path.getAt(i);
-            coordinates.push({ lat: point.lat(), lng: point.lng() });
+            newCoordinates.push({ lat: point.lat(), lng: point.lng() });
           }
-          memoizedOnCoordinatesChange(coordinates);
+
+          // 既存の initialLine と新しい座標をマージ
+          const updatedCoordinates = [...initialLine, ...newCoordinates];
+          setInitialLine(updatedCoordinates); // 状態を更新
+          memoizedOnCoordinatesChange(updatedCoordinates); // 更新後の全座標を渡す
 
           const distance = google.maps.geometry.spherical.computeLength(path);
           setTotalDistance((prev) => prev + distance);
           onDistanceChange((distance / 1000).toFixed(2));
           manager.setDrawingMode(null);
-          if ((distance / 1000).toFixed(2) <= "1") {
-            handleShortDistance();
-          }
+          setTotalDistance((prev) => {
+            const updatedDistance = prev + distance;
+            onDistanceChange((updatedDistance / 1000).toFixed(2));
+
+            // 合計距離が1km以下の場合にモーダルを表示
+            if (updatedDistance <= 1000) {
+              handleShortDistance();
+            }
+
+            return updatedDistance;
+          });
         }
       );
+
       // 初期座標でポリラインを描画
       if (initialLine.length > 0) {
         const polyline = new google.maps.Polyline({

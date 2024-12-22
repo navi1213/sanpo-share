@@ -2,9 +2,10 @@
 
 import { auth } from "@/auth";
 import db from "@/db/drizzle";
-import { users } from "@/db/usersSchema";
+import { users } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { authenticator } from "otplib";
+
 export const get2faSecret = async () => {
   const session = await auth();
   //ログインしているかどうかチェック
@@ -31,11 +32,11 @@ export const get2faSecret = async () => {
   const twoFactorSecret = user.twoFactorSecret ?? "";
   //ユーザーに二段階認証の秘密鍵がなければ生成してDBに保存
   if (!twoFactorSecret) {
-    const twoFactorSecret = authenticator.generateSecret();
+    const generatedTwoFactorSecret = authenticator.generateSecret();
     await db
       .update(users)
       .set({
-        twoFactorSecret,
+        twoFactorSecret: generatedTwoFactorSecret,
       })
       .where(eq(users.id, parseInt(session.user.id)));
   }

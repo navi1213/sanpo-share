@@ -12,10 +12,13 @@ export default async function MyAccount() {
   if (!session?.user?.id) {
     redirect("/login");
   }
-  const [user] = await db.select({
-    twoFactorActivated: users.twoFactorActivated,
-    //(logged-in)/layout.tsxにセッションがなければloginに飛ばす処理を書いてるのでsession?.user?.id!としている。
-  }).from(users).where(eq(users.id,parseInt(session.user.id)));
+  const [user] = await db
+    .select({
+      twoFactorActivated: users.twoFactorActivated,
+      //(logged-in)/layout.tsxにセッションがなければloginに飛ばす処理を書いてるのでsession?.user?.id!としている。
+    })
+    .from(users)
+    .where(eq(users.id, parseInt(session.user.id)));
 
   return (
     <Card className="w-[350px]">
@@ -25,7 +28,9 @@ export default async function MyAccount() {
       <CardContent>
         <Label>Email Address</Label>
         <div className="text-muted-foreground">{session.user.email}</div>
-        <TwoFactorAuthForm twoFactorActivated={user.twoFactorActivated ?? false}/>
+        <TwoFactorAuthForm
+          twoFactorActivated={user.twoFactorActivated ?? false}
+        />
       </CardContent>
     </Card>
   );
