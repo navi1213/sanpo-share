@@ -88,7 +88,7 @@ export default function MapWithDrawing({
 
       return () => manager.setMap(null);
     }
-  }, [mapInstance, memoizedOnCoordinatesChange]);
+  }, [mapInstance, memoizedOnCoordinatesChange, onDistanceChange]);
 
   // 描画中の線をキャンセル
   const handleCancelDrawing = () => {
@@ -129,9 +129,9 @@ export default function MapWithDrawing({
       });
     }
   };
-  const onClose = ()=>{
-    setShowModal(false)
-  }
+  const onClose = () => {
+    setShowModal(false);
+  };
   // コンポーネントマウント時に呼び出し
   if (loadError) return <div>Error loading maps</div>;
   if (!isLoaded) return <div>Loading...</div>;
@@ -191,14 +191,19 @@ export default function MapWithDrawing({
         center={center}
         zoom={17}
         onLoad={(map) => setMapInstance(map)}
-        options={{ mapTypeControl: false ,
+        options={{
+          mapTypeControl: false,
           draggableCursor: "url('/uzai-inu.jpg'), auto",
           draggingCursor: "move",
         }}
       />
       {showModal && (
-  <Modal path="/angry-dog.jpg" text="ワンちゃんが悲しんでいます 😢" onClose={onClose}/>
-)}
+        <Modal
+          path="/angry-dog.jpg"
+          text="ワンちゃんが悲しんでいます 😢"
+          onClose={onClose}
+        />
+      )}
     </div>
   );
 }

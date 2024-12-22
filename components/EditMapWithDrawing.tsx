@@ -105,7 +105,13 @@ export default function EditMapWithDrawing({
 
       return () => manager.setMap(null);
     }
-  }, [mapInstance, memoizedOnCoordinatesChange, initialCoordinates]);
+  }, [
+    mapInstance,
+    memoizedOnCoordinatesChange,
+    initialCoordinates,
+    initialLine,
+    onDistanceChange,
+  ]);
 
   // 描画中の線をキャンセル
   const handleCancelDrawing = () => {
