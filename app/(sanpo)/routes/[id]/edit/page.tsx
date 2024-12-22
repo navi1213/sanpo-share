@@ -16,7 +16,7 @@ export default async function Edit({ params }: RouteProps) {
   }
   return (
     <>
-      <EditForm route={route} />
+      <EditForm route={route} params={params} />
     </>
   );
 }

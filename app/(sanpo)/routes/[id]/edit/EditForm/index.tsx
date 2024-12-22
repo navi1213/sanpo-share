@@ -18,7 +18,9 @@ import { useToast } from "@/hooks/use-toast";
 import { useForm } from "react-hook-form";
 import { Textarea } from "@/components/ui/textarea";
 import { updateRoute } from "../actions";
-export default function EditForm({ route }) {
+import { useRouter } from "next/navigation";
+export default function EditForm({ route, params }) {
+  const router = useRouter();
   const { toast } = useToast();
   const [coordinates, setCoordinates] = useState<
     { lat: number; lng: number }[]
@@ -74,6 +76,7 @@ export default function EditForm({ route }) {
       setCoordinates([]);
       form.reset(); // フォームのリセット
     }
+    router.push(`/routes/${params.id}`);
   };
   return (
     <div className="flex flex-col gap-4">
