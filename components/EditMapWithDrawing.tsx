@@ -11,12 +11,14 @@ const containerStyle = {
 
 const libraries: Libraries = ["drawing", "places", "geometry"]; // geometryライブラリを追加
 
-export default function MapWithDrawing({
+export default function EditMapWithDrawing({
   onCoordinatesChange,
   onDistanceChange,
+  initialCoordinates,
 }: {
   onCoordinatesChange: (coordinates: { lat: number; lng: number }[]) => void;
   onDistanceChange: (distance: string) => void;
+  initialCoordinates: { lat: number; lng: number }[];
 }) {
   const { isLoaded, loadError } = useLoadScript({
     googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!,
@@ -35,15 +37,16 @@ export default function MapWithDrawing({
   const [isDrawing, setIsDrawing] = useState(false);
   const [polylines, setPolylines] = useState<google.maps.Polyline[]>([]);
   const [totalDistance, setTotalDistance] = useState<number>(0); // 距離の状態を追加
-  const [center, setCenter] = useState<{ lat: number; lng: number }>({
-    lat: 35.51805063978616,
-    lng: 139.7048587992674,
-  });
+  const [center, setCenter] = useState<{ lat: number; lng: number }>(
+    initialCoordinates.length > 0
+      ? { lat: initialCoordinates[0].lat, lng: initialCoordinates[0].lng }
+      : { lat: 35.51805063978616, lng: 139.7048587992674 }
+  );
   const searchBoxRef = useRef<HTMLInputElement | null>(null); // Autocompleteの参照
   const memoizedOnCoordinatesChange = useCallback(onCoordinatesChange, [
     onCoordinatesChange,
   ]);
-
+  const [initialLine, setInitialLine] = useState(initialCoordinates);
   useEffect(() => {
     if (mapInstance) {
       const manager = new google.maps.drawing.DrawingManager({
@@ -72,9 +75,8 @@ export default function MapWithDrawing({
             const point = path.getAt(i);
             coordinates.push({ lat: point.lat(), lng: point.lng() });
           }
-          memoizedOnCoordinatesChange(coordinates); // メモ化された関数を呼び出す
+          memoizedOnCoordinatesChange(coordinates);
 
-          // 距離を計算
           const distance = google.maps.geometry.spherical.computeLength(path);
           setTotalDistance((prev) => prev + distance);
           onDistanceChange((distance / 1000).toFixed(2));
@@ -84,11 +86,26 @@ export default function MapWithDrawing({
           }
         }
       );
+      // 初期座標でポリラインを描画
+      if (initialLine.length > 0) {
+        const polyline = new google.maps.Polyline({
+          path: initialLine,
+          map: mapInstance,
+        });
+
+        setPolylines((prev) => [...prev, polyline]); // Polyline オブジェクトを追加
+        const initialPath = polyline.getPath();
+        const initialDistance =
+          google.maps.geometry.spherical.computeLength(initialPath);
+        setTotalDistance(initialDistance); // 距離を設定
+        onDistanceChange((initialDistance / 1000).toFixed(2)); // 距離を表示
+      }
+
       setDrawingManager(manager);
 
       return () => manager.setMap(null);
     }
-  }, [mapInstance, memoizedOnCoordinatesChange]);
+  }, [mapInstance, memoizedOnCoordinatesChange, initialCoordinates]);
 
   // 描画中の線をキャンセル
   const handleCancelDrawing = () => {
@@ -100,15 +117,18 @@ export default function MapWithDrawing({
   // 最後のポリラインを削除
   const handleUndoLastPolyline = () => {
     if (polylines.length > 0) {
-      const lastPolyline = polylines[polylines.length - 1];
-      const path = lastPolyline.getPath();
-
-      // 削除する距離を計算
-      const distance = google.maps.geometry.spherical.computeLength(path);
-
-      lastPolyline.setMap(null);
-      setPolylines((prev) => prev.slice(0, -1));
-      setTotalDistance((prev) => prev - distance);
+      polylines.forEach((polyline) => {
+        polyline.setMap(null);
+      });
+      setPolylines([]);
+      setTotalDistance(0);
+      setInitialLine([]);
+      onCoordinatesChange([]);
+      onDistanceChange("0");
+      // 描画モードをリセット
+      if (drawingManager) {
+        drawingManager.setDrawingMode(null);
+      }
     }
   };
 
@@ -129,9 +149,9 @@ export default function MapWithDrawing({
       });
     }
   };
-  const onClose = ()=>{
-    setShowModal(false)
-  }
+  const onClose = () => {
+    setShowModal(false);
+  };
   // コンポーネントマウント時に呼び出し
   if (loadError) return <div>Error loading maps</div>;
   if (!isLoaded) return <div>Loading...</div>;
@@ -191,14 +211,19 @@ export default function MapWithDrawing({
         center={center}
         zoom={17}
         onLoad={(map) => setMapInstance(map)}
-        options={{ mapTypeControl: false ,
+        options={{
+          mapTypeControl: false,
           draggableCursor: "url('/uzai-inu.jpg'), auto",
           draggingCursor: "move",
         }}
       />
       {showModal && (
-  <Modal path="/angry-dog.jpg" text="ワンちゃんが悲しんでいます 😢" onClose={onClose}/>
-)}
+        <Modal
+          path="/angry-dog.jpg"
+          text="ワンちゃんが悲しんでいます 😢"
+          onClose={onClose}
+        />
+      )}
     </div>
   );
 }

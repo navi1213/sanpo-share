@@ -26,7 +26,6 @@ export default function New() {
   const handleCoordinatesUpdate = (
     newCoordinates: { lat: number; lng: number }[]
   ) => {
-    console.log("座標データ:", newCoordinates); // デバッグ用
     setCoordinates(newCoordinates);
   };
   const { toast } = useToast();

@@ -67,6 +67,8 @@ export const updatePassword = async ({
         password: hashedPassword,
       })
       .where(eq(users.id, passwordResetToken.userId!));
-      await db.delete(passwordResetTokens).where(eq(passwordResetTokens.id,passwordResetToken.id))
+    await db
+      .delete(passwordResetTokens)
+      .where(eq(passwordResetTokens.id, passwordResetToken.id));
   }
 };

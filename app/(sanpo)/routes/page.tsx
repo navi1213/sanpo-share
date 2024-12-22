@@ -10,7 +10,6 @@ import Link from "next/link";
 
 export default async function Routes() {
   const routes = await fetchRoutes();
-  console.log(routes);
   return (
     <main className="flex flex-col items-center min-h-screen gap-5">
       <div className="w-full max-w-[650px]">

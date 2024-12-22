@@ -1,10 +1,6 @@
 "use client";
 
-import {
-  GoogleMap,
-  Polyline,
-  useLoadScript,
-} from "@react-google-maps/api";
+import { GoogleMap, Polyline, useLoadScript } from "@react-google-maps/api";
 import { useEffect, useState } from "react";
 import CustomMarker from "./CustomMarker";
 
@@ -13,23 +9,17 @@ const containerStyle = {
   height: "500px",
 };
 
-// デフォルトのマップ中心位置
-// const center = {
-//   lat: 35.517745,
-//   lng: 139.70416,
-// };
-
 export default function RouteMap({
-  path,distance
+  path,
+  distance,
 }: {
   path: { lat: number; lng: number }[];
-  distance:string;
+  distance: string;
 }) {
   const center = path[0];
   const { isLoaded, loadError } = useLoadScript({
     googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!,
   });
-
   const [startMarker, setStartMarker] = useState<{
     lat: number;
     lng: number;
@@ -42,7 +32,6 @@ export default function RouteMap({
     lat: number;
     lng: number;
   } | null>(null);
-
   useEffect(() => {
     if (path.length > 0) {
       const start = path[0];
@@ -77,7 +66,6 @@ export default function RouteMap({
           coordinate={adjustedEndMarker ? adjustedEndMarker : endMarker}
           name="ゴール"
         />
-
       )}
 
       {/* ルートのポリライン */}
@@ -92,8 +80,8 @@ export default function RouteMap({
         />
       )}
       <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-10 bg-white p-2 rounded shadow">
-      <strong>合計距離: {distance} km</strong>
-    </div>
+        <strong>合計距離: {distance} km</strong>
+      </div>
     </GoogleMap>
   );
 }
