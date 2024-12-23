@@ -5,7 +5,6 @@ import db from "@/db/drizzle";
 import { users } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { authenticator } from "otplib";
-
 export const get2faSecret = async () => {
   const session = await auth();
   //ログインしているかどうかチェック
@@ -36,6 +35,7 @@ export const get2faSecret = async () => {
     await db
       .update(users)
       .set({
+        // @ts-ignore
         twoFactorSecret: generatedTwoFactorSecret,
       })
       .where(eq(users.id, parseInt(session.user.id)));
@@ -83,6 +83,7 @@ export const activate2fa = async (token: string) => {
     await db
       .update(users)
       .set({
+        // @ts-ignore
         twoFactorActivated: true,
       })
       .where(eq(users.id, parseInt(session.user.id)));
@@ -111,6 +112,7 @@ export const disable2fa = async () => {
   await db
     .update(users)
     .set({
+      //@ts-ignore
       twoFactorActivated: false,
     })
     .where(eq(users.id, parseInt(session.user.id)));

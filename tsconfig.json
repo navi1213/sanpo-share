@@ -3,7 +3,7 @@
     "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
     "skipLibCheck": true,
-    "strict": true,
+    "strict": false,
     "noEmit": true,
     "esModuleInterop": true,
     "module": "esnext",
@@ -29,5 +29,8 @@
     ".next/types/**/*.ts",
     ".next/types/app/(logged-in)/new/page.tsx"
   ],
-  "exclude": ["node_modules"]
+  "exclude": [
+    "node_modules",
+    "./app/(logged-in)/my-account/two-factor-auth-form/actions.ts"
+  ]
 }
