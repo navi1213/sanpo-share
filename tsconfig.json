@@ -29,8 +29,5 @@
     ".next/types/**/*.ts",
     ".next/types/app/(logged-in)/new/page.tsx"
   ],
-  "exclude": [
-    "node_modules",
-    "./app/(logged-in)/my-account/two-factor-auth-form/actions.ts"
-  ]
+  "exclude": ["node_modules"]
 }
