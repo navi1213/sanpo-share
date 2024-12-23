@@ -35,7 +35,7 @@ export const get2faSecret = async () => {
     await db
       .update(users)
       .set({
-        // @ts-ignore
+        // @ts-expect-error: 2fa_secretは存在する
         twoFactorSecret: generatedTwoFactorSecret,
       })
       .where(eq(users.id, parseInt(session.user.id)));
@@ -83,7 +83,7 @@ export const activate2fa = async (token: string) => {
     await db
       .update(users)
       .set({
-        // @ts-ignore
+        //@ts-expect-error: 2fa_activatedは存在する
         twoFactorActivated: true,
       })
       .where(eq(users.id, parseInt(session.user.id)));
@@ -112,7 +112,7 @@ export const disable2fa = async () => {
   await db
     .update(users)
     .set({
-      //@ts-ignore
+      // @ts-expect-error: 2fa_activatedは存在する
       twoFactorActivated: false,
     })
     .where(eq(users.id, parseInt(session.user.id)));
