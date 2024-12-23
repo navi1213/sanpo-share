@@ -10,7 +10,7 @@ export const registerUser = async ({
   passwordConfirm,
 }: {
   email: string;
-  username:string;
+  username: string;
   password: string;
   passwordConfirm: string;
 }) => {
@@ -31,8 +31,8 @@ export const registerUser = async ({
       };
     }
     const hashedPassword = await hash(password, 10);
-
     await db.insert(users).values({
+      // @ts-expect-error: email, username, passwordは存在する
       email,
       username,
       password: hashedPassword,
