@@ -2,13 +2,7 @@
 
 import { FormProvider, useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { submitReview } from "./actions";

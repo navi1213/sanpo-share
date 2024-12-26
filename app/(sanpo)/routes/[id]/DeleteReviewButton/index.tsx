@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
-import { deleteReviewById, deleteRouteById } from "../actions";
+import { deleteReviewById } from "../actions";
 
 export default function DeleteButton({ reviewId }: { reviewId: number }) {
   const router = useRouter();
