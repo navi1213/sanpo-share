@@ -1,6 +1,7 @@
 "use server";
 import { auth } from "@/auth";
 import db from "@/db/drizzle";
+import { reviews } from "@/db/reviewsSchema";
 import { routes } from "@/db/routesSchema";
 import { eq } from "drizzle-orm";
 
@@ -39,4 +40,8 @@ export const deleteRouteById = async (id: string) => {
     };
   }
   await db.delete(routes).where(eq(routes.id, parseInt(id)));
+};
+
+export const deleteReviewById = async (id: number) => {
+  await db.delete(reviews).where(eq(reviews.id, id));
 };

@@ -1,7 +1,11 @@
 export default async function RoutesLayout({
   children,
+  params,
 }: {
   children: React.ReactNode;
+  params: {
+    id: string;
+  };
 }) {
   return (
     <>
