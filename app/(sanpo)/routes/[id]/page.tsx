@@ -5,11 +5,12 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { fetchRouteById } from "./actions"; // actions.ts から特定のルートを取得する関数をインポート
+import { deleteRouteById, fetchRouteById } from "./actions"; // actions.ts から特定のルートを取得する関数をインポート
 import RouteMap from "./map";
 import { Button } from "@/components/ui/button";
 import { auth } from "@/auth";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 
 type RouteProps = {
   params: {
@@ -24,6 +25,14 @@ export default async function RouteDetail({ params }: RouteProps) {
     return <div>ルートが見つかりません。</div>;
   }
   const isAuthor = parseInt(session?.user?.id) === route.author;
+  const handleDeleteRoute = async () => {
+    const response = await deleteRouteById(params.id);
+    if (response.error) {
+      return;
+    }
+    redirect("/routes");
+  };
+
   return (
     <main className="flex flex-col  min-h-screen">
       <RouteMap
@@ -49,6 +58,7 @@ export default async function RouteDetail({ params }: RouteProps) {
                     編集
                   </Button>
                 </Link>
+
                 <Button variant="destructive">削除</Button>
               </>
             ) : (

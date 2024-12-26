@@ -40,7 +40,15 @@ export default function RouteMap({
       setEndMarker(end);
 
       // スタートとゴールが同じ場合にピンを少しずらす
-      if (start.lat === end.lat && start.lng === end.lng) {
+      const distanceThreshold = 0.0005; // 緯度経度の差のしきい値（小さくするほど厳密）
+
+      const isClose = (start, end) => {
+        const latDiff = Math.abs(start.lat - end.lat);
+        const lngDiff = Math.abs(start.lng - end.lng);
+        return latDiff < distanceThreshold && lngDiff < distanceThreshold;
+      };
+
+      if (isClose(start, end)) {
         setAdjustedEndMarker({
           lat: end.lat + 0.0001, // 緯度をわずかに増やして調整
           lng: end.lng + 0.0001, // 経度をわずかに増やして調整

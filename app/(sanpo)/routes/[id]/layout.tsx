@@ -1,4 +1,4 @@
-export default async function LoggedOutLayout({
+export default async function RoutesLayout({
   children,
 }: {
   children: React.ReactNode;

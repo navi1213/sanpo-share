@@ -233,7 +233,7 @@ export default function EditMapWithDrawing({
         onLoad={(map) => setMapInstance(map)}
         options={{
           mapTypeControl: false,
-          draggableCursor: "url('/uzai-inu.jpg'), auto",
+          draggableCursor: "url('/inu.png'), auto",
           draggingCursor: "move",
         }}
       />
