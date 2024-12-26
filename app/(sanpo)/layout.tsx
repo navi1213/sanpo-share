@@ -6,11 +6,9 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-     <>
-            <Header/>
-        <div className="min-h-screen flex flex-col">
-          {children}
-        </div>
-      </>
+    <>
+      <Header />
+      <div className="min-h-screen flex flex-col">{children}</div>
+    </>
   );
 }

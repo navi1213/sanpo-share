@@ -15,6 +15,7 @@ export default function DeleteButton({ routeId }: DeleteButtonProps) {
     try {
       await deleteRouteById(routeId);
       router.push("/routes"); // 削除後にリストページなどにリダイレクト
+      router.refresh(); // リダイレクト後にページをリフレッシュ
     } catch (error) {
       console.error("Error deleting route:", error);
     }
