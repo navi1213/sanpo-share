@@ -14,6 +14,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
+import { useRouter } from "next/navigation";
 
 const formSchema = z.object({
   content: z.string().nonempty("レビューを入力してください"),
@@ -21,6 +22,7 @@ const formSchema = z.object({
 
 export default function ReviewForm({ params }: { params: { id: string } }) {
   const { toast } = useToast();
+  const router = useRouter();
   const formMethods = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -38,6 +40,7 @@ export default function ReviewForm({ params }: { params: { id: string } }) {
         className: "bg-green-500 text-white",
         title: "レビューを投稿しました",
       });
+      router.refresh(); // ページをリロード
       formMethods.reset(); // フォームをリセット
     } catch (error) {
       toast({
