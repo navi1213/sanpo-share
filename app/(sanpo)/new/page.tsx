@@ -18,10 +18,12 @@ import { registerRoute } from "./actions"; // サーバー側処理をインポ�
 import { useToast } from "@/hooks/use-toast";
 import { useForm } from "react-hook-form";
 import { Textarea } from "@/components/ui/textarea";
+import { useRouter } from "next/navigation";
 export default function New() {
   const [coordinates, setCoordinates] = useState<
     { lat: number; lng: number }[]
   >([]);
+  const router = useRouter();
   const [distance, setDistance] = useState(null);
   const handleCoordinatesUpdate = (
     newCoordinates: { lat: number; lng: number }[]
@@ -72,7 +74,7 @@ export default function New() {
         className: "bg-green-500 text-white",
       });
       setCoordinates([]);
-      form.reset(); // フォームのリセット
+      router.push("/routes");
     }
   };
 
