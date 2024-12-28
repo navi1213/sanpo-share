@@ -8,11 +8,9 @@ export const fetchRoutes = async () => {
   return allRoutes;
 };
 export const fetchReviewByRouteId = async (id: string) => {
-  console.log(parseInt(id));
   const review = await db
     .select()
     .from(reviews)
     .where(eq(reviews.routeId, parseInt(id)));
-  console.log(review);
   return review;
 };

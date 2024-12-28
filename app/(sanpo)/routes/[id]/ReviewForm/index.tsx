@@ -15,12 +15,15 @@ import {
 } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
+import Link from "next/link";
 
 const formSchema = z.object({
   content: z.string().nonempty("レビューを入力してください"),
 });
 
 export default function ReviewForm({ params }: { params: { id: string } }) {
+  const { data: session } = useSession();
   const { toast } = useToast();
   const router = useRouter();
   const formMethods = useForm<z.infer<typeof formSchema>>({
@@ -63,30 +66,47 @@ export default function ReviewForm({ params }: { params: { id: string } }) {
               disabled={formMethods.formState.isSubmitting}
               className="flex flex-col gap-2"
             >
-              <FormField
-                control={formMethods.control}
-                name={"content"}
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>レビュー</FormLabel>
-                    <FormControl>
-                      <textarea
-                        {...field}
-                        className="w-full p-2 border border-gray-300 rounded-md"
-                        placeholder="レビューを入力してください..."
-                        rows={4}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <Button
-                type="submit"
-                className="mt-2 bg-blue-500 text-white px-4 py-2 rounded-md"
-              >
-                レビューを投稿
-              </Button>
+              {session ? (
+                <>
+                  <FormField
+                    control={formMethods.control}
+                    name={"content"}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>レビュー</FormLabel>
+                        <FormControl>
+                          <textarea
+                            {...field}
+                            className="w-full p-2 border border-gray-300 rounded-md"
+                            placeholder="レビューを入力してください..."
+                            rows={4}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <Button
+                    type="submit"
+                    className="mt-2 bg-blue-500 text-white px-4 py-2 rounded-md"
+                  >
+                    レビューを投稿
+                  </Button>
+                </>
+              ) : (
+                <div className="p-4 border border-red-500 rounded-md">
+                  <p className="text-red-500">
+                    レビューを投稿するにはログインが必要です。
+                  </p>
+                  <Link href={`/login?redirect=routes/${params.id}`}>
+                  <Button
+                    className="mt-2 bg-blue-500 text-white px-4 py-2 rounded-md"
+                  >
+                    ログイン
+                  </Button>
+                  </Link>
+                </div>
+              )}
             </fieldset>
           </form>
         </FormProvider>
