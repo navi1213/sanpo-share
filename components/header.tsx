@@ -23,7 +23,7 @@ export default function Header() {
             <span className="text-xl font-bold">散歩シェア</span>
           </Link>
           {/* Desktop Navigation */}
-          <nav className="hidden xl:flex items-center space-x-6 ml-6">
+          <nav className="hidden md:flex items-center space-x-6 ml-6">
             <Link
               href="/"
               className="text-sm hover:text-gray-300 transition-colors"
@@ -45,7 +45,7 @@ export default function Header() {
           </nav>
 
           {/* Desktop Auth Buttons */}
-          <div className="hidden xl:flex items-center space-x-4 ml-auto">
+          <div className="hidden md:flex items-center space-x-4 ml-auto">
             {session ? (
               <>
                 <Link href="/my-account">
@@ -83,7 +83,7 @@ export default function Header() {
           <Button
             variant="ghost"
             size="icon"
-            className="ml-auto xl:hidden" // ボタンを右端に配置
+            className="ms-auto md:hidden" // ボタンを右端に配置
             onClick={() => setIsMenuOpen(!isMenuOpen)}
           >
             {isMenuOpen ? (
@@ -96,7 +96,7 @@ export default function Header() {
 
         {/* Mobile Menu */}
         {isMenuOpen && (
-          <div className="xl:hidden border-t border-gray-800">
+          <div className="md:hidden border-t border-gray-800">
             <nav className="flex flex-col space-y-4 py-4">
               <Link
                 href="/"
