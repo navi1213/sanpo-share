@@ -61,6 +61,7 @@ export default function EditForm({ route, params }) {
       location: data.location,
       path: coordinates as { lat: number; lng: number }[],
       distance,
+      routeId:route.id
     });
     if (response?.error) {
       // エラー処理

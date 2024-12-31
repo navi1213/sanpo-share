@@ -22,12 +22,14 @@ export const updateRoute = async ({
   location,
   path,
   distance,
+  routeId
 }: {
   name: string;
   description: string;
   location: string;
   path: { lat: number; lng: number }[];
   distance: string;
+  routeId: string;
 }) => {
   const session = await auth();
   if (!session?.user?.id) {
@@ -84,7 +86,7 @@ export const updateRoute = async ({
       createdBy: user.username,
       distance,
       author: user.id,
-    } as RouteInsert);
+    } as RouteInsert).where(eq(routes.id, parseInt(routeId)));
 
     return { success: true, message: "ルートが作成されました" };
   } catch (error) {
