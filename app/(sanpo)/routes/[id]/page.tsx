@@ -36,7 +36,7 @@ export default async function RouteDetail({ params }: RouteProps) {
       />
       <div className="flex  justify-center">
         {/* 左側：ルート説明 */}
-        <Card className="w-[450px] flex flex-col gap-3">
+        <Card className="w-[450px] flex flex-col gap-3 break-words">
           <CardHeader>
             <CardTitle>{route.name}</CardTitle>
           </CardHeader>

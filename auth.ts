@@ -62,5 +62,26 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         };
       },
     }),
+    Credentials({
+      id: "guest-login",
+      name: "Guest Login",
+      credentials: {},
+      async authorize() {
+        // ゲストユーザーをデータベースから取得
+        const [guestUser] = await db
+          .select()
+          .from(users)
+          .where(eq(users.email, "guest@example.com")); // 固定のゲストメール
+
+        if (!guestUser) {
+          throw new Error("ゲストユーザーが見つかりません。");
+        }
+
+        return {
+          id: guestUser.id.toString(),
+          email: guestUser.email,
+        };
+      },
+    }),
   ],
 });

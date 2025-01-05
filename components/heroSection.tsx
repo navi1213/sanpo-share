@@ -1,6 +1,6 @@
 "use client";
 import { Button } from "@/components/ui/button";
-import { signOut, useSession } from "next-auth/react";
+import { signOut, useSession ,signIn} from "next-auth/react";
 import Image from "next/image";
 import Link from "next/link";
 export default function HeroSection() {
@@ -9,6 +9,9 @@ export default function HeroSection() {
     await signOut();
     await update();
   };
+  const handleGuestLogin = async () => {
+    signIn("guest-login");
+  }
   return (
     <section className="relative w-full h-[80vh] overflow-hidden">
       {/* 背景画像 */}
@@ -53,6 +56,7 @@ export default function HeroSection() {
                   メンバー登録
                 </Button>
               </Link>
+              <Button onClick ={handleGuestLogin}>ゲストログイン</Button>
             </>
           )}
         </div>

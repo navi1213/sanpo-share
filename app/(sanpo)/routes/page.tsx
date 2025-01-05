@@ -17,7 +17,7 @@ export default async function Routes() {
       </div>
       {routes.length > 0 ? (
         routes.map((route) => (
-          <Card className="w-[650px]" key={route.id}>
+          <Card className="w-[650px] break-words" key={route.id}>
             <CardHeader className="text-xl font-bold">{route.name}</CardHeader>
             <CardContent>
               <p className="text-gray-700">{route.description}</p>
