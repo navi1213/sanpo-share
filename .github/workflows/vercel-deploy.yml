@@ -1,0 +1,41 @@
+name: Vercel Deploy and Notify on Failure
+
+on:
+  push:
+    branches:
+      - main  # デプロイ対象のブランチを指定
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Install Vercel CLI
+        run: npm install -g vercel
+
+      - name: Deploy to Vercel
+        id: vercel-deploy
+        run: |
+          npx vercel --prod --token ${{ secrets.VERCEL_TOKEN }} || echo "Vercel build failed" > vercel_failure.log
+
+      - name: Check Vercel Build Status
+        id: check-vercel
+        run: |
+          if [ -f vercel_failure.log ]; then
+            echo "failure=true" >> $GITHUB_ENV
+          else
+            echo "failure=false" >> $GITHUB_ENV
+          fi
+
+      - name: Notify Discord on Failure
+        if: env.failure == 'true'
+        run: |
+          curl -X POST -H "Content-Type: application/json" \
+          -d '{
+                "username": "Vercel Bot",
+                "content": "⚠️ Vercel Build Failed for branch `main`! Check logs for details."
+              }' \
+          ${{ secrets.DISCORD_WEBHOOK_URL }}
