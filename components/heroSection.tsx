@@ -52,11 +52,11 @@ export default function HeroSection() {
                 </Button>
               </Link>
               <Link href="/register">
-                <Button className="px-6 py-3 bg-red-500 hover:bg-red-600 text-white rounded-lg shadow">
+                <Button className="px-6 py-3 bg-green-500 hover:bg-green-600 text-white rounded-lg shadow">
                   メンバー登録
                 </Button>
               </Link>
-              <Button onClick ={handleGuestLogin}>ゲストログイン</Button>
+              <Button  className="px-6 py-3 bg-orange-500 hover:bg-orange-600 text-white rounded-lg shadow" onClick ={handleGuestLogin}>ゲストログイン</Button>
             </>
           )}
         </div>
