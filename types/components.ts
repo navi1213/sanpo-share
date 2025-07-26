@@ -29,13 +29,11 @@ export interface RouteData {
   id: number;
   name: string;
   description: string | null;
-  location: string;
+  location: string | null;
   path: Coordinate[];
   distance: string;
   createdBy: string | null;
   author: number | null;
-  createdAt: Date;
-  updatedAt: Date;
 }
 
 export interface RouteActionButtonsProps {

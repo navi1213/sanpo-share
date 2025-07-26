@@ -189,8 +189,8 @@ export default function Register() {
                     {/* フォーム値の確認 */}
                     <div className="mt-2">
                       <div className="font-bold">現在の値:</div>
-                      <div>email: "{form.watch('email')}" (長さ: {form.watch('email')?.length || 0})</div>
-                      <div>username: "{form.watch('username')}" (長さ: {form.watch('username')?.length || 0})</div>
+                      <div>email: &quot;{form.watch('email')}&quot; (長さ: {form.watch('email')?.length || 0})</div>
+                      <div>username: &quot;{form.watch('username')}&quot; (長さ: {form.watch('username')?.length || 0})</div>
                       <div>password: 長さ {form.watch('password')?.length || 0}</div>
                       <div>confirmPassword: 長さ {form.watch('confirmPassword')?.length || 0}</div>
                     </div>

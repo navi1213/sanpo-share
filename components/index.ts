@@ -22,7 +22,7 @@ export * from './templates';
 
 // ============= Hooks =============
 // コンポーネント用カスタムフック
-export { useEditForm } from '@/hooks/useEditForm';
+export { useEditForm } from '../hooks/useEditForm';
 
 // ============= Legacy Components =============
 // 移行期間中のみ - 段階的に削除予定

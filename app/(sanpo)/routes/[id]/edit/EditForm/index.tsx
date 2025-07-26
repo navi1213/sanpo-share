@@ -1,18 +1,13 @@
 "use client";
 
 import { useMemo } from "react";
-import {
-  Form,
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  MapContainer,
-  RouteFormFields,
-  RouteActionButtons,
-  useEditForm,
-  type RouteData
-} from "@/components";
+import { Form } from "@/components/molecules/form";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/atoms/card";
+import MapContainer from "@/components/organisms/Map/MapContainer";
+import { RouteFormFields } from "@/components/molecules/RouteFormFields";
+import { RouteActionButtons } from "@/components/molecules/RouteActionButtons";
+import { useEditForm } from "@/hooks/useEditForm";
+import { RouteData } from "@/types/components";
 import { updateRoute } from "../actions";
 
 interface EditFormProps {
@@ -90,7 +85,7 @@ export default function EditForm({ route, params }: EditFormProps) {
         onUserDelete={handleUserDelete}
       />
     );
-  }, [initialCoordinates, handleCoordinatesUpdate, handleDistanceUpdate, handleUserDelete, isDataReady]);
+  }, [initialCoordinates, handleCoordinatesUpdate, handleDistanceUpdate, handleUserDelete, isDataReady, coordinates.length]);
 
   return (
     <div className="flex flex-col gap-4">

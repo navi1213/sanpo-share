@@ -85,7 +85,7 @@ export default function EditForm({ route, params }: EditFormProps) {
         onUserDelete={handleUserDelete}
       />
     );
-  }, [initialCoordinates, handleCoordinatesUpdate, handleDistanceUpdate, handleUserDelete, isDataReady]);
+  }, [initialCoordinates, handleCoordinatesUpdate, handleDistanceUpdate, handleUserDelete, isDataReady, coordinates.length]);
 
   return (
     <div className="flex flex-col gap-4">

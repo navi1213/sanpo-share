@@ -12,9 +12,18 @@ import { revalidatePath, revalidateTag } from 'next/cache';
 export const fetchRouteById = async (id: string) => {
   try {
     console.log('fetchRouteById (edit): 開始', { id, idType: typeof id, parsedId: parseInt(id) });
-    
+
     const [route] = await db
-      .select()
+      .select({
+        id: routes.id,
+        name: routes.name,
+        description: routes.description,
+        location: routes.location,
+        path: routes.path,
+        distance: routes.distance,
+        createdBy: routes.createdBy,
+        author: routes.author,
+      })
       .from(routes)
       .where(eq(routes.id, parseInt(id)));
 
