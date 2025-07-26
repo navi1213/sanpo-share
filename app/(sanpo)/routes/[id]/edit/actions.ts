@@ -5,14 +5,25 @@ import db from "@/db/drizzle";
 import { routes, users } from "@/db/schema";
 import { auth } from "@/auth";
 import { z } from "zod";
-import { Coordinate } from "@/types";
-import { revalidatePath, revalidateTag } from 'next/cache';
+import { revalidatePath, revalidateTag } from "next/cache";
+import { redirect } from "next/navigation";
+import type { Coordinate } from "@/types";
 
-// 既存のルート取得
-export const fetchRouteById = async (id: string) => {
+// 型ガード関数
+function isCoordinateArray(value: unknown): value is Coordinate[] {
+  return Array.isArray(value) && 
+    value.every(item => 
+      typeof item === 'object' && 
+      item !== null && 
+      'lat' in item && 
+      'lng' in item &&
+      typeof item.lat === 'number' &&
+      typeof item.lng === 'number'
+    );
+}
+
+export async function fetchRouteById(id: string) {
   try {
-    console.log('fetchRouteById (edit): 開始', { id, idType: typeof id, parsedId: parseInt(id) });
-
     const [route] = await db
       .select({
         id: routes.id,
@@ -27,56 +38,42 @@ export const fetchRouteById = async (id: string) => {
       .from(routes)
       .where(eq(routes.id, parseInt(id)));
 
-    console.log('fetchRouteById (edit): クエリ結果', { route, routeExists: !!route });
-
     if (!route) {
-      console.log('fetchRouteById (edit): ルートが見つかりません');
-      return null;
+      throw new Error("ルートが見つかりません");
     }
 
-    console.log('fetchRouteById (edit): ルート取得成功', {
-      id: route.id,
-      name: route.name,
-      author: route.author,
-      pathType: typeof route.path,
-      pathContent: route.path
-    });
-
-    // pathをJSONパースして返す
-    let parsedPath;
-    try {
-      // pathが既にオブジェクト配列の場合はそのまま使用
-      if (typeof route.path === 'object' && Array.isArray(route.path)) {
-        console.log('fetchRouteById (edit): pathは既にオブジェクト配列です');
-        parsedPath = route.path;
-      } else if (typeof route.path === 'string') {
-        console.log('fetchRouteById (edit): pathを文字列から解析します');
-        parsedPath = JSON.parse(route.path);
-      } else {
-        console.log('fetchRouteById (edit): 予期しないpath型', typeof route.path);
+    // パス解析 - 型安全な処理
+    let parsedPath: Coordinate[] = [];
+    
+    if (isCoordinateArray(route.path)) {
+      parsedPath = route.path;
+    } else if (typeof route.path === 'string') {
+      try {
+        const parsed = JSON.parse(route.path);
+        if (isCoordinateArray(parsed)) {
+          parsedPath = parsed;
+        }
+      } catch {
         parsedPath = [];
       }
-      console.log('fetchRouteById (edit): パス解析成功', { pathLength: parsedPath.length });
-    } catch (parseError) {
-      console.error('fetchRouteById (edit): JSON解析エラー:', parseError);
-      parsedPath = [];
     }
 
-    // キャッシュを無効化
-    revalidateTag(`route-${id}`);
-    revalidatePath(`/routes/${id}/edit`);
-
     return {
-      ...route,
-      path: parsedPath
+      success: true,
+      route: {
+        ...route,
+        path: parsedPath,
+      },
     };
   } catch (error) {
-    console.error('fetchRouteById (edit): データベースエラー:', error);
-    return null;
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "ルートの取得に失敗しました",
+    };
   }
-};
+}
 
-export const updateRoute = async ({
+export async function updateRoute({
   name,
   description,
   location,
@@ -90,13 +87,13 @@ export const updateRoute = async ({
   path: Coordinate[];
   distance: string;
   routeId: string;
-}) => {
+}) {
   try {
     const session = await auth();
     if (!session?.user?.id || !session.user.email) {
       return {
-        error: true,
-        message: "ログインしてください。",
+        success: false,
+        error: "ログインしてください。",
       };
     }
 
@@ -110,17 +107,16 @@ export const updateRoute = async ({
 
     if (!user) {
       return {
-        error: true,
-        message: "ユーザーが見つかりませんでした。",
+        success: false,
+        error: "ユーザーが見つかりませんでした。",
       };
     }
 
     const coordinateSchema = z.object({
-      lat: z.number().min(-90).max(90), // 緯度の範囲
-      lng: z.number().min(-180).max(180), // 経度の範囲
+      lat: z.number().min(-90).max(90),
+      lng: z.number().min(-180).max(180),
     });
 
-    // フォームスキーマ全体
     const formSchema = z.object({
       name: z.string().min(1, "ルート名は必須です"),
       description: z.string(),
@@ -137,9 +133,8 @@ export const updateRoute = async ({
 
     if (!newFormValidation.success) {
       return {
-        error: true,
-        message:
-          newFormValidation.error.issues[0]?.message ?? "エラーが発生しました",
+        success: false,
+        error: newFormValidation.error.issues[0]?.message ?? "エラーが発生しました",
       };
     }
 
@@ -157,17 +152,16 @@ export const updateRoute = async ({
     // キャッシュを無効化
     revalidateTag(`route-${routeId}`);
     revalidatePath(`/routes/${routeId}/edit`);
-    revalidatePath(`/routes/${routeId}`); // 詳細ページも無効化
-    revalidatePath('/routes'); // 一覧ページも無効化
+    revalidatePath(`/routes/${routeId}`);
+    revalidatePath('/routes');
 
     return { 
-      success: true, 
-      message: "ルートが更新されました" 
+      success: true,
     };
   } catch (error) {
     return {
-      error: true,
-      message: "ルート更新中にエラーが発生しました",
+      success: false,
+      error: "ルート更新中にエラーが発生しました",
     };
   }
-};
+}

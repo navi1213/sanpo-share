@@ -6,45 +6,43 @@ import { routes } from "@/db/routesSchema";
 import { eq } from "drizzle-orm";
 import { Coordinate } from "@/types";
 
+// 型ガード関数
+function isCoordinateArray(value: unknown): value is Coordinate[] {
+  return Array.isArray(value) && 
+    value.every(item => 
+      typeof item === 'object' && 
+      item !== null && 
+      'lat' in item && 
+      'lng' in item &&
+      typeof item.lat === 'number' &&
+      typeof item.lng === 'number'
+    );
+}
+
 // 特定のルート取得
 export const fetchRouteById = async (id: string) => {
   try {
-    console.log('fetchRouteById: 開始', { id, idType: typeof id, parsedId: parseInt(id) });
-    
     const [route] = await db
       .select()
       .from(routes)
       .where(eq(routes.id, parseInt(id)));
 
-    console.log('fetchRouteById: クエリ結果', { route, routeExists: !!route });
-
     if (!route) {
-      console.log('fetchRouteById: ルートが見つかりません');
       return null;
     }
 
-    console.log('fetchRouteById: ルート取得成功', {
-      id: route.id,
-      name: route.name,
-      pathType: typeof route.path,
-      pathContent: route.path
-    });
-
-    // pathをJSONパースして返す
-    let parsedPath;
+    // pathをJSONパースして返す - 型安全な処理
+    let parsedPath: Coordinate[] = [];
+    
     try {
-      // pathが既にオブジェクト配列の場合はそのまま使用
-      if (typeof route.path === 'object' && Array.isArray(route.path)) {
-        console.log('fetchRouteById: pathは既にオブジェクト配列です');
+      if (isCoordinateArray(route.path)) {
         parsedPath = route.path;
       } else if (typeof route.path === 'string') {
-        console.log('fetchRouteById: pathを文字列から解析します');
-        parsedPath = JSON.parse(route.path);
-      } else {
-        console.log('fetchRouteById: 予期しないpath型', typeof route.path);
-        parsedPath = [];
+        const parsed = JSON.parse(route.path);
+        if (isCoordinateArray(parsed)) {
+          parsedPath = parsed;
+        }
       }
-      console.log('fetchRouteById: パス解析成功', { pathLength: parsedPath.length });
     } catch (parseError) {
       console.error('fetchRouteById: パス解析エラー', parseError);
       parsedPath = [];
@@ -52,18 +50,12 @@ export const fetchRouteById = async (id: string) => {
 
     const result = {
       ...route,
-      path: parsedPath as Coordinate[],
+      path: parsedPath,
     };
-
-    console.log('fetchRouteById: 返却データ', {
-      id: result.id,
-      name: result.name,
-      pathLength: result.path.length
-    });
 
     return result;
   } catch (error) {
-    console.error('fetchRouteById: エラー', error);
+    console.error('fetchRouteById: データベースエラー:', error);
     return null;
   }
 };

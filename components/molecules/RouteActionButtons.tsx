@@ -19,15 +19,17 @@ export const RouteActionButtons = ({
     });
   };
 
+  // 早期リターンパターンの適用
   const handleDeleteAll = () => {
-    const confirmDelete = window.confirm('すべてのルートを削除しますか？\n\nこの操作は取り消すことができません。');
-    if (confirmDelete) {
-      onDeleteAll();
-      toast({
-        title: "削除完了",
-        description: "すべてのルートが削除されました",
-      });
+    if (!window.confirm('すべてのルートを削除しますか？\n\nこの操作は取り消すことができません。')) {
+      return;
     }
+    
+    onDeleteAll();
+    toast({
+      title: "削除完了",
+      description: "すべてのルートが削除されました",
+    });
   };
 
   return (

@@ -1,32 +1,27 @@
 "use client";
 
+import { useState, useCallback, useMemo } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { useState } from "react";
-import MapContainer from "@/components/Map/MapContainer";
+import { useToast } from "@/hooks/use-toast";
+import MapContainer from "@/components/organisms/Map/MapContainer";
+import { registerRoute } from "./actions";
+import { useRouter } from "next/navigation";
+import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
+import { routeCreateSchema, type RouteCreateData } from "@/validation/schemas";
+
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { registerRoute } from "./actions";
-import { useToast } from "@/hooks/use-toast";
-import { useForm } from "react-hook-form";
-import { Textarea } from "@/components/ui/textarea";
-import { useRouter } from "next/navigation";
-import { routeCreateSchema, RouteCreateData } from "@/validation/schemas";
 import { Coordinate } from "@/types";
 
-export default function New() {
+import { Textarea } from "@/components/ui/textarea";
+
+const RouteCreatePage = () => {
   const [coordinates, setCoordinates] = useState<Coordinate[]>([]);
-  const [distance, setDistance] = useState<string>("0");
-  const router = useRouter();
+  const [distance, setDistance] = useState<string>("0.00 km");
   const { toast } = useToast();
+  const router = useRouter();
 
   const form = useForm<RouteCreateData>({
     resolver: zodResolver(routeCreateSchema),
@@ -35,57 +30,54 @@ export default function New() {
       description: "",
       location: "",
       path: [],
-      distance: "0",
+      distance: "",
     },
   });
 
-  const handleCoordinatesUpdate = (newCoordinates: Coordinate[]) => {
+  const handleCoordinatesUpdate = useCallback((newCoordinates: Coordinate[]) => {
+    console.log('座標更新:', newCoordinates.length, '点');
     setCoordinates(newCoordinates);
     form.setValue("path", newCoordinates);
-  };
+  }, [form]);
 
-  const handleDistanceUpdate = (newDistance: string) => {
+  const handleDistanceUpdate = useCallback((newDistance: string) => {
+    console.log('距離更新:', newDistance);
     setDistance(newDistance);
     form.setValue("distance", newDistance);
-  };
+  }, [form]);
 
-  const handleSubmit = async (data: RouteCreateData) => {
+  const onSubmit = async (data: RouteCreateData) => {
     try {
-      // デバッグ情報を出力
-      console.log('フォームデータ:', data);
-      console.log('座標:', coordinates);
-      console.log('距離:', distance);
-      console.log('フォームの状態:', form.formState);
-      console.log('エラー:', form.formState.errors);
-
-      const response = await registerRoute({
-        ...data,
+      console.log('フォーム送信データ:', data);
+      
+      const result = await registerRoute({
+        name: data.name,
+        description: data.description,
+        location: data.location,
         path: coordinates,
-        distance,
+        distance: distance,
       });
 
-      console.log('レスポンス:', response);
-
-      if (!response.success) {
+      if (result.error) {
+        console.error('保存エラー:', result.message);
         toast({
           title: "エラー",
-          description: response.error || "ルートの登録に失敗しました",
+          description: result.message || "ルートの保存に失敗しました",
           variant: "destructive",
         });
         return;
       }
 
+      console.log('保存成功');
       toast({
         title: "成功",
-        description: "散歩ルートが正常に登録されました",
+        description: "ルートが正常に保存されました",
       });
 
-      setCoordinates([]);
-      setDistance("0");
-      form.reset();
-      router.push("/routes");
+      // 成功時にルート一覧ページにリダイレクト
+      router.push('/routes');
     } catch (error) {
-      console.error('エラーの詳細:', error);
+      console.error('予期しないエラー:', error);
       toast({
         title: "エラー",
         description: "予期しないエラーが発生しました",
@@ -94,107 +86,103 @@ export default function New() {
     }
   };
 
+  // MapContainerのメモ化
+  const mapContainer = useMemo(() => (
+    <MapContainer
+      onCoordinatesChange={handleCoordinatesUpdate}
+      onDistanceChange={handleDistanceUpdate}
+    />
+  ), [handleCoordinatesUpdate, handleDistanceUpdate]);
+
   return (
     <div className="flex flex-col gap-4">
       {/* 地図エリア */}
       <div className="w-full h-[500px]">
-        <MapContainer
-          onCoordinatesChange={handleCoordinatesUpdate}
-          onDistanceChange={handleDistanceUpdate}
-          initialCoordinates={coordinates}
-        />
+        {mapContainer}
       </div>
 
       {/* フォームエリア */}
-      <div className="w-full">
-        <Card>
-          <CardHeader>
-            <CardTitle>新しい散歩ルートを作成</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-                <FormField
-                  control={form.control}
-                  name="name"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>ルート名</FormLabel>
-                      <FormControl>
-                        <Input placeholder="散歩ルートの名前を入力" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+      <Card>
+        <CardHeader>
+          <CardTitle>ルート情報を入力</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {/* データ表示 */}
+          <div className="mb-4 p-4 bg-gray-50 rounded-lg">
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              <div>
+                <span className="font-medium">座標数:</span>
+                <span className="ml-2">{coordinates.length} 点</span>
+              </div>
+              <div>
+                <span className="font-medium">距離:</span>
+                <span className="ml-2">{distance}</span>
+              </div>
+            </div>
+          </div>
 
-                <FormField
-                  control={form.control}
-                  name="description"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>説明</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          placeholder="ルートの説明を入力（任意）"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>ルート名</FormLabel>
+                    <FormControl>
+                      <Input placeholder="散歩のルート名を入力してください" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-                <FormField
-                  control={form.control}
-                  name="location"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>場所</FormLabel>
-                      <FormControl>
-                        <Input placeholder="場所を入力" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+              <FormField
+                control={form.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>説明</FormLabel>
+                    <FormControl>
+                      <Textarea 
+                        placeholder="このルートの特徴や見どころを教えてください" 
+                        className="resize-none"
+                        rows={3}
+                        {...field} 
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-                <div className="flex items-center gap-4">
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-gray-700">
-                      描画された距離: {distance} km
-                    </p>
-                    <p className="text-sm text-gray-500">
-                      座標数: {coordinates.length} 点
-                    </p>
-                  </div>
-                </div>
+              <FormField
+                control={form.control}
+                name="location"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>場所</FormLabel>
+                    <FormControl>
+                      <Input placeholder="地域や最寄り駅などを入力してください" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-                <div className="flex gap-2">
-                  <Button
-                    type="submit"
-                    disabled={coordinates.length === 0 || !form.formState.isValid}
-                    className="flex-1"
-                  >
-                    ルートを保存
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => {
-                      setCoordinates([]);
-                      setDistance("0");
-                      form.reset();
-                    }}
-                  >
-                    リセット
-                  </Button>
-                </div>
-              </form>
-            </Form>
-          </CardContent>
-        </Card>
-      </div>
+              <Button 
+                type="submit" 
+                disabled={coordinates.length === 0 || !form.formState.isValid}
+                className="w-full"
+              >
+                ルートを保存
+              </Button>
+            </form>
+          </Form>
+        </CardContent>
+      </Card>
     </div>
   );
-}
+};
+
+export default RouteCreatePage;

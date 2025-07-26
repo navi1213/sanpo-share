@@ -1,6 +1,6 @@
+import { notFound } from "next/navigation";
 import { fetchRouteById } from "./actions";
 import EditForm from "./EditForm";
-import { notFound } from "next/navigation";
 
 // 動的レンダリングを強制
 export const dynamic = 'force-dynamic';
@@ -13,21 +13,13 @@ interface EditPageProps {
 }
 
 export default async function EditPage({ params }: EditPageProps) {
-  console.log('📝 EditPage: ルート編集ページ開始', { routeId: params.id });
-  
-  const route = await fetchRouteById(params.id);
-  
-  if (!route) {
-    console.log('📝 EditPage: ルートが見つかりません', { routeId: params.id });
+  const result = await fetchRouteById(params.id);
+
+  if (!result.success || !result.route) {
     notFound();
   }
 
-  console.log('📝 EditPage: ルートデータ取得成功', {
-    routeId: route.id,
-    routeName: route.name,
-    pathLength: route.path?.length || 0,
-    timestamp: new Date().toISOString()
-  });
+  const { route } = result;
 
   return (
     <div className="min-h-screen flex flex-col">

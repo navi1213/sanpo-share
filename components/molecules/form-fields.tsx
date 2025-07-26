@@ -11,32 +11,26 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Control } from "react-hook-form";
 
-interface FormFieldProps {
+interface UnifiedFormFieldProps {
   control: Control<any>;
   name: string;
   label: string;
   placeholder?: string;
-  type?: "text" | "email" | "password" | "number";
-  required?: boolean;
-}
-
-interface TextareaFieldProps {
-  control: Control<any>;
-  name: string;
-  label: string;
-  placeholder?: string;
+  type?: "text" | "email" | "password" | "number" | "textarea";
   rows?: number;
   required?: boolean;
 }
 
-export function FormInputField({
+// 統一されたFormFieldコンポーネント - 内部で分岐
+export function UnifiedFormField({
   control,
   name,
   label,
   placeholder,
   type = "text",
+  rows = 3,
   required = false,
-}: FormFieldProps) {
+}: UnifiedFormFieldProps) {
   return (
     <FormField
       control={control}
@@ -48,16 +42,59 @@ export function FormInputField({
             {required && <span className="text-red-500 ml-1">*</span>}
           </FormLabel>
           <FormControl>
-            <Input
-              {...field}
-              type={type}
-              placeholder={placeholder}
-              className="w-full"
-            />
+            {type === "textarea" ? (
+              <Textarea
+                {...field}
+                placeholder={placeholder}
+                rows={rows}
+                className="w-full"
+              />
+            ) : (
+              <Input
+                {...field}
+                type={type}
+                placeholder={placeholder}
+                className="w-full"
+              />
+            )}
           </FormControl>
           <FormMessage />
         </FormItem>
       )}
+    />
+  );
+}
+
+// 後方互換性のため、既存のコンポーネントも残す
+interface FormFieldProps {
+  control: Control<any>;
+  name: string;
+  label: string;
+  placeholder?: string;
+  type?: "text" | "email" | "password" | "number";
+  required?: boolean;
+}
+
+interface TextareaFieldProps extends FormFieldProps {
+  rows?: number;
+}
+
+export function FormInputField({
+  control,
+  name,
+  label,
+  placeholder,
+  type = "text",
+  required = false,
+}: FormFieldProps) {
+  return (
+    <UnifiedFormField
+      control={control}
+      name={name}
+      label={label}
+      placeholder={placeholder}
+      type={type}
+      required={required}
     />
   );
 }
@@ -71,26 +108,14 @@ export function FormTextareaField({
   required = false,
 }: TextareaFieldProps) {
   return (
-    <FormField
+    <UnifiedFormField
       control={control}
       name={name}
-      render={({ field }) => (
-        <FormItem>
-          <FormLabel>
-            {label}
-            {required && <span className="text-red-500 ml-1">*</span>}
-          </FormLabel>
-          <FormControl>
-            <Textarea
-              {...field}
-              placeholder={placeholder}
-              rows={rows}
-              className="w-full"
-            />
-          </FormControl>
-          <FormMessage />
-        </FormItem>
-      )}
+      label={label}
+      placeholder={placeholder}
+      type="textarea"
+      rows={rows}
+      required={required}
     />
   );
 } 

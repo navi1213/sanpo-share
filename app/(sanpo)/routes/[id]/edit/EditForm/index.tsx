@@ -30,106 +30,119 @@ const FormLoadingSkeleton = () => (
   <div className="space-y-4">
     {Array.from({ length: 3 }).map((_, i) => (
       <div key={i} className="animate-pulse">
-        <div className="h-4 bg-gray-200 rounded w-1/4 mb-2"></div>
-        <div className={`h-${i === 1 ? '20' : '10'} bg-gray-200 rounded`}></div>
+        <div className="h-4 bg-gray-300 rounded w-1/4 mb-2"></div>
+        <div className="h-10 bg-gray-200 rounded"></div>
       </div>
     ))}
   </div>
 );
 
 export default function EditForm({ route, params }: EditFormProps) {
+  // 新しいuseEditForm APIに合わせた修正
+  const editFormHook = useEditForm({
+    route,
+    onUpdate: async (data) => {
+      // データを正しい型に変換
+      const updateData = {
+        name: data.name || "",
+        description: data.description || "",
+        location: data.location || "",
+        path: data.path || [],
+        distance: data.distance || "0",
+        routeId: params.id,
+      };
+      return await updateRoute(updateData);
+    },
+  });
+
   const {
     coordinates,
     distance,
-    initialCoordinates,
     isDataReady,
+    userDeleted,
     form,
     handleCoordinatesUpdate,
     handleDistanceUpdate,
     handleUserDelete,
-    handleReset,
-    handleDeleteAll,
-    handleSubmit,
-    isFormValid,
-    onCancel,
-  } = useEditForm({
-    route,
-    routeId: params.id,
-    updateRoute,
-  });
+    onSubmit,
+    resetUserDeletedFlag,
+  } = editFormHook;
 
-  console.log('📝 EditForm初期化:', {
-    routeId: route.id,
-    routeName: route.name,
-    routePathLength: route.path?.length || 0,
-    timestamp: new Date().toISOString()
-  });
+  // 初期座標のメモ化
+  const initialCoordinates = useMemo(() => {
+    return route?.path || [];
+  }, [route?.path]);
 
-  // MapContainerのメモ化
-  const mapContainer = useMemo(() => {
-    console.log('🗺️ EditForm: MapContainer メモ化チェック:', {
-      initialCoordinatesLength: initialCoordinates.length,
-      coordinatesLength: coordinates.length,
-      isDataReady: isDataReady
-    });
-    
-    if (!isDataReady) {
-      return <LoadingSpinner />;
-    }
-    
+  const isMapReady = useMemo(() => {
+    return isDataReady && coordinates.length >= 0;
+  }, [isDataReady, coordinates.length]);
+
+  const isFormValid = useMemo(() => {
+    return form.formState.isValid && coordinates.length > 0;
+  }, [form.formState.isValid, coordinates.length]);
+
+  if (!isDataReady) {
     return (
-      <MapContainer
-        onCoordinatesChange={handleCoordinatesUpdate}
-        onDistanceChange={handleDistanceUpdate}
-        initialCoordinates={initialCoordinates}
-        onUserDelete={handleUserDelete}
-      />
+      <div className="container mx-auto px-4 py-8">
+        <Card>
+          <CardHeader>
+            <CardTitle>ルート編集</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <FormLoadingSkeleton />
+          </CardContent>
+        </Card>
+      </div>
     );
-  }, [initialCoordinates, handleCoordinatesUpdate, handleDistanceUpdate, handleUserDelete, isDataReady, coordinates.length]);
+  }
 
   return (
-    <div className="flex flex-col gap-4">
-      {/* 地図エリア */}
-      <div className="w-full h-[500px]">{mapContainer}</div>
+    <div className="container mx-auto px-4 py-8">
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>ルート編集</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* フォームフィールド */}
+              <RouteFormFields control={form.control as any} />
 
-      {/* フォームエリア */}
-      <Card>
-        <CardHeader>
-          <CardTitle>ルート情報</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {/* データ表示 */}
-          <div className="mb-4 p-4 bg-gray-50 rounded-lg">
-            <div className="grid grid-cols-2 gap-4 text-sm">
-              <div>
-                <span className="font-medium">座標数:</span>
-                <span className="ml-2">{coordinates.length} 点</span>
+              {/* 地図コンテナ */}
+              <div className="w-full h-[500px] relative">
+                {isMapReady ? (
+                  <MapContainer
+                    initialCoordinates={initialCoordinates}
+                    onCoordinatesChange={handleCoordinatesUpdate}
+                    onDistanceChange={handleDistanceUpdate}
+                    onUserDelete={handleUserDelete}
+                    height="500px"
+                    width="100%"
+                  />
+                ) : (
+                  <LoadingSpinner />
+                )}
               </div>
-              <div>
-                <span className="font-medium">距離:</span>
-                <span className="ml-2">{distance} km</span>
-              </div>
-            </div>
-          </div>
 
-          {isDataReady ? (
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-                <RouteFormFields control={form.control} />
-                <RouteActionButtons
-                  coordinates={coordinates}
-                  isFormValid={isFormValid}
-                  onReset={handleReset}
-                  onDeleteAll={handleDeleteAll}
-                  onCancel={onCancel}
-                />
-              </form>
-            </Form>
-          ) : (
-            <FormLoadingSkeleton />
-          )}
-        </CardContent>
-      </Card>
+              {/* アクションボタン */}
+              <RouteActionButtons
+                coordinates={coordinates}
+                isFormValid={isFormValid}
+                onReset={() => {
+                  resetUserDeletedFlag();
+                  return "フォームがリセットされました";
+                }}
+                onDeleteAll={() => {
+                  handleUserDelete();
+                }}
+                onCancel={() => {
+                  window.location.href = `/routes/${params.id}`;
+                }}
+              />
+            </CardContent>
+          </Card>
+        </form>
+      </Form>
     </div>
   );
 }

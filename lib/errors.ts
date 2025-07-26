@@ -37,7 +37,7 @@ export class ErrorFactory {
   }
 }
 
-// APIレスポンスヘルパー
+// APIレスポンスヘルパー - 冗長性を削除
 export class ApiResponseHelper {
   static success<T>(data: T, message?: string): ApiResponse<T> {
     return {
@@ -50,7 +50,6 @@ export class ApiResponseHelper {
   static error(error: AppError): ApiResponse {
     return {
       success: false,
-      error: true,
       message: error.message,
     };
   }
