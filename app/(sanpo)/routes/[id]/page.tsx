@@ -14,36 +14,51 @@ import DeleteButton from "./DeleteRouteButton";
 import ReviewForm from "./ReviewForm";
 import { fetchReviewByRouteId } from "../actions";
 import DeleteReviewButton from "./DeleteReviewButton";
-type RouteProps = {
+
+interface RouteDetailProps {
   params: {
     id: string; // 動的ルートで渡される ID
   };
-};
+}
 
-export default async function RouteDetail({ params }: RouteProps) {
+export default async function RouteDetail({ params }: RouteDetailProps) {
   const route = await fetchRouteById(params.id); // ID を使ってデータを取得
   const reviewList = await fetchReviewByRouteId(params.id);
   const session = await auth();
+  
   if (!route) {
     return <div>ルートが見つかりません。</div>;
   }
-  const isAuthor = parseInt(session?.user?.id) === route.author;
+  
+  const isAuthor = session?.user?.id ? parseInt(session.user.id) === route.author : false;
+  
+  console.log('📄 詳細ページ: 認証・権限チェック', {
+    routeId: params.id,
+    routeAuthor: route.author,
+    sessionExists: !!session,
+    sessionUserId: session?.user?.id,
+    sessionUserIdType: typeof session?.user?.id,
+    parsedSessionUserId: session?.user?.id ? parseInt(session.user.id) : null,
+    isAuthor: isAuthor,
+    authorMatch: session?.user?.id && route.author ? parseInt(session.user.id) === route.author : false
+  });
+  
   return (
-    <main className="flex flex-col  min-h-screen">
+    <main className="flex flex-col min-h-screen">
       <RouteMap
-        path={(route.path as { lat: number; lng: number }[]) || []}
+        path={route.path}
         distance={route.distance}
       />
-      <div className="flex  justify-center">
+      <div className="flex justify-center">
         {/* 左側：ルート説明 */}
         <Card className="w-[450px] flex flex-col gap-3 break-words">
           <CardHeader>
             <CardTitle>{route.name}</CardTitle>
           </CardHeader>
           <CardContent>
-            <p>詳細:{route.description}</p>
-            <p>場所:{route.location}</p>
-            {isAuthor ? (
+            <p>詳細: {route.description}</p>
+            <p>場所: {route.location}</p>
+            {isAuthor && (
               <>
                 <Link href={`/routes/${params.id}/edit`}>
                   <Button
@@ -55,8 +70,6 @@ export default async function RouteDetail({ params }: RouteProps) {
                 </Link>
                 <DeleteButton routeId={params.id} />
               </>
-            ) : (
-              ""
             )}
           </CardContent>
           <CardFooter className="text-muted-foreground text-xs">
@@ -71,7 +84,7 @@ export default async function RouteDetail({ params }: RouteProps) {
               <CardContent>
                 <p className="text-lg font-semibold">{review.content}</p>
               </CardContent>
-              {parseInt(session?.user?.id) === review.author && (
+              {session?.user?.id && parseInt(session.user.id) === review.author && (
                 <div className="flex justify-end p-2">
                   <DeleteReviewButton reviewId={review.id} />
                 </div>
@@ -86,4 +99,5 @@ export default async function RouteDetail({ params }: RouteProps) {
     </main>
   );
 }
+
 export const revalidate = 0;

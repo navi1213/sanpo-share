@@ -2,9 +2,10 @@
 
 import { auth } from "@/auth";
 import db from "@/db/drizzle";
-import { users } from "@/db/schema";
+import { users } from "@/db/usersSchema";
 import { eq } from "drizzle-orm";
 import { authenticator } from "otplib";
+
 export const get2faSecret = async () => {
   const session = await auth();
   //ログインしているかどうかチェック
@@ -15,39 +16,49 @@ export const get2faSecret = async () => {
     };
   }
 
-  const [user] = await db
-    .select({
-      twoFactorSecret: users.twoFactorSecret,
-    })
-    .from(users)
-    .where(eq(users.id, parseInt(session.user.id)));
-  //該当するユーザーが見つからなかったらエラーを返す
-  if (!user) {
+  try {
+    const [user] = await db
+      .select({
+        twoFactorSecret: users.twoFactorSecret,
+      })
+      .from(users)
+      .where(eq(users.id, parseInt(session.user.id)));
+      
+    //該当するユーザーが見つからなかったらエラーを返す
+    if (!user) {
+      return {
+        error: true,
+        message: "ユーザーが見つかりませんでした",
+      };
+    }
+    
+    let twoFactorSecret = user.twoFactorSecret ?? "";
+    
+    //ユーザーに二段階認証の秘密鍵がなければ生成してDBに保存
+    if (!twoFactorSecret) {
+      twoFactorSecret = authenticator.generateSecret();
+      await db
+        .update(users)
+        .set({
+          twoFactorSecret: twoFactorSecret,
+        })
+        .where(eq(users.id, parseInt(session.user.id)));
+    }
+    
+    //googleのauthenticatorで表示するサイト名と名前と秘密鍵をkeyuriにわたす
+    return {
+      twoFactorSecret: authenticator.keyuri(
+        session.user.email ?? "",
+        "散歩シェア",
+        twoFactorSecret
+      ),
+    };
+  } catch (error) {
     return {
       error: true,
-      message: "ユーザーが見つかりませんでした",
+      message: "2FAの設定取得中にエラーが発生しました",
     };
   }
-  const twoFactorSecret = user.twoFactorSecret ?? "";
-  //ユーザーに二段階認証の秘密鍵がなければ生成してDBに保存
-  if (!twoFactorSecret) {
-    const generatedTwoFactorSecret = authenticator.generateSecret();
-    await db
-      .update(users)
-      .set({
-        // @ts-expect-error: 2fa_secretは存在する
-        twoFactorSecret: generatedTwoFactorSecret,
-      })
-      .where(eq(users.id, parseInt(session.user.id)));
-  }
-  //googleのauthenticatorで表示するサイト名と名前と秘密鍵をkeyuriにわたす
-  return {
-    twoFactorSecret: authenticator.keyuri(
-      session.user.email ?? "",
-      "散歩シェア",
-      twoFactorSecret
-    ),
-  };
 };
 
 export const activate2fa = async (token: string) => {
@@ -59,36 +70,56 @@ export const activate2fa = async (token: string) => {
       message: "ログインしてください",
     };
   }
-  const [user] = await db
-    .select({
-      twoFactorSecret: users.twoFactorSecret,
-    })
-    .from(users)
-    .where(eq(users.id, parseInt(session.user.id)));
+  
+  try {
+    const [user] = await db
+      .select({
+        twoFactorSecret: users.twoFactorSecret,
+      })
+      .from(users)
+      .where(eq(users.id, parseInt(session.user.id)));
 
-  if (!user) {
-    return {
-      error: true,
-      message: "ユーザーが見つかりませんでした",
-    };
-  }
-  if (user.twoFactorSecret) {
-    const tokenValid = authenticator.check(token, user.twoFactorSecret);
-    if (!tokenValid) {
+    if (!user) {
       return {
         error: true,
-        message: "ワンタイムパスワードが間違ってます",
+        message: "ユーザーが見つかりませんでした",
       };
     }
-    await db
-      .update(users)
-      .set({
-        //@ts-expect-error: 2fa_activatedは存在する
-        twoFactorActivated: true,
-      })
-      .where(eq(users.id, parseInt(session.user.id)));
+    
+    if (user.twoFactorSecret) {
+      const tokenValid = authenticator.check(token, user.twoFactorSecret);
+      if (!tokenValid) {
+        return {
+          error: true,
+          message: "ワンタイムパスワードが間違ってます",
+        };
+      }
+      
+      await db
+        .update(users)
+        .set({
+          twoFactorActivated: true,
+        })
+        .where(eq(users.id, parseInt(session.user.id)));
+
+      return {
+        success: true,
+        message: "2FA認証が有効になりました",
+      };
+    } else {
+      return {
+        error: true,
+        message: "2FAシークレットが設定されていません",
+      };
+    }
+  } catch (error) {
+    return {
+      error: true,
+      message: "2FA有効化中にエラーが発生しました",
+    };
   }
 };
+
 export const disable2fa = async () => {
   const session = await auth();
   if (!session?.user?.id) {
@@ -97,23 +128,37 @@ export const disable2fa = async () => {
       message: "ログインしてください",
     };
   }
-  const [user] = await db
-    .select({
-      twoFactorSecret: users.twoFactorSecret,
-    })
-    .from(users)
-    .where(eq(users.id, parseInt(session.user.id)));
-  if (!user) {
+  
+  try {
+    const [user] = await db
+      .select({
+        twoFactorSecret: users.twoFactorSecret,
+      })
+      .from(users)
+      .where(eq(users.id, parseInt(session.user.id)));
+      
+    if (!user) {
+      return {
+        error: true,
+        message: "ユーザーが見つかりませんでした",
+      };
+    }
+    
+    await db
+      .update(users)
+      .set({
+        twoFactorActivated: false,
+      })
+      .where(eq(users.id, parseInt(session.user.id)));
+
+    return {
+      success: true,
+      message: "2FA認証が無効になりました",
+    };
+  } catch (error) {
     return {
       error: true,
-      message: "ユーザーが見つかりませんでした",
+      message: "2FA無効化中にエラーが発生しました",
     };
   }
-  await db
-    .update(users)
-    .set({
-      // @ts-expect-error: 2fa_activatedは存在する
-      twoFactorActivated: false,
-    })
-    .where(eq(users.id, parseInt(session.user.id)));
 };

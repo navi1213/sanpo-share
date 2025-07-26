@@ -6,6 +6,91 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
+/* Google Maps のコンソール警告を視覚的に抑制 */
+.gm-err-container,
+.gm-err-content,
+.gm-err-icon {
+  display: none !important;
+}
+
+/* Google Maps UI要素の非表示 */
+.gm-style .gm-style-cc {
+  display: none !important; /* 著作権表示を非表示 */
+}
+
+.gm-style .gm-style-mtc {
+  display: none !important; /* 地図タイプコントロールを非表示 */
+}
+
+.gm-style .gm-bundled-control {
+  display: none !important; /* バンドルされたコントロールを非表示 */
+}
+
+.gm-style .gm-bundled-control-on-bottom {
+  display: none !important; /* 下部のコントロールを非表示 */
+}
+
+.gm-style .gmnoprint {
+  display: none !important; /* 印刷時非表示要素を非表示 */
+}
+
+.gm-style .gm-fullscreen-control {
+  display: none !important; /* フルスクリーンコントロールを非表示 */
+}
+
+/* Google Maps の不要なポップアップやツールチップを非表示 */
+.gm-style .gm-style-iw {
+  display: none !important;
+}
+
+.gm-style .gm-ui-hover-effect {
+  display: none !important;
+}
+
+/* Google の「写真」ボタンなどの固有UI要素を非表示 */
+.gm-style button[data-value="写真"],
+.gm-style button[data-value="Photos"],
+.gm-style .widget-settings-button,
+.gm-style .widget-expand-button,
+.gm-style .gm-title,
+.gm-style .place-desc-large,
+.gm-style .section-hero-header-title-bottom,
+.gm-style .section-hero-header-image {
+  display: none !important;
+}
+
+/* 地図上のクリック可能なアイコンの操作を無効化 */
+.gm-style .gm-style-pbc {
+  display: none !important;
+}
+
+/* 描画モード時のカーソルスタイル - 最小限の設定 */
+.drawing-mode {
+  cursor: crosshair !important;
+}
+
+.drawing-mode .gm-style {
+  cursor: crosshair !important;
+}
+
+/* Drawing Manager の要素を確実に表示 */
+.drawing-mode .gm-style .gmnoprint {
+  display: block !important;
+}
+
+/* 描画中の未完成ポリラインのスタイル調整 */
+.gm-style div[style*="position: absolute"] polyline {
+  stroke-dasharray: 5,5;
+  stroke-opacity: 0.8;
+  animation: dash 1s linear infinite;
+}
+
+@keyframes dash {
+  to {
+    stroke-dashoffset: -10;
+  }
+}
+
 @layer utilities {
   .text-balance {
     text-wrap: balance;

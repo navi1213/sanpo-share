@@ -1,6 +1,12 @@
 import Image from "next/image";
 
-export default function Modal({ path, text, onClose }) {
+interface ModalProps {
+  path: string;
+  text: string;
+  onClose: () => void;
+}
+
+export default function Modal({ path, text, onClose }: ModalProps) {
   return (
     <div
       style={{
@@ -22,9 +28,8 @@ export default function Modal({ path, text, onClose }) {
         <Image
           src={path}
           alt="悲しいワンちゃん"
-          layout="fill"
-          objectFit="cover" // 画像を全体にフィット
-          style={{ borderRadius: "10px" }}
+          fill
+          style={{ objectFit: "cover", borderRadius: "10px" }}
         />
         {/* 文字 */}
         <div

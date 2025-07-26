@@ -1,37 +1,31 @@
 "use client";
 
-import { GoogleMap, Polyline, useLoadScript } from "@react-google-maps/api";
+import { GoogleMap, Polyline } from "@react-google-maps/api";
 import { useEffect, useState } from "react";
 import CustomMarker from "./CustomMarker";
+import { Coordinate } from "@/types";
+import { useGoogleMaps } from "@/hooks/useGoogleMaps";
 
 const containerStyle = {
   width: "100%",
   height: "500px",
 };
 
-export default function RouteMap({
-  path,
-  distance,
-}: {
-  path: { lat: number; lng: number }[];
+interface RouteMapProps {
+  path: Coordinate[];
   distance: string;
-}) {
-  const center = path[0];
-  const { isLoaded, loadError } = useLoadScript({
-    googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!,
+}
+
+export default function RouteMap({ path, distance }: RouteMapProps) {
+  const center = path.length > 0 ? path[0] : { lat: 35.6762, lng: 139.6503 };
+  const { isLoaded, loadError } = useGoogleMaps({
+    apiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!,
   });
-  const [startMarker, setStartMarker] = useState<{
-    lat: number;
-    lng: number;
-  } | null>(null);
-  const [endMarker, setEndMarker] = useState<{
-    lat: number;
-    lng: number;
-  } | null>(null);
-  const [adjustedEndMarker, setAdjustedEndMarker] = useState<{
-    lat: number;
-    lng: number;
-  } | null>(null);
+  
+  const [startMarker, setStartMarker] = useState<Coordinate | null>(null);
+  const [endMarker, setEndMarker] = useState<Coordinate | null>(null);
+  const [adjustedEndMarker, setAdjustedEndMarker] = useState<Coordinate | null>(null);
+  
   useEffect(() => {
     if (path.length > 0) {
       const start = path[0];
@@ -42,7 +36,7 @@ export default function RouteMap({
       // スタートとゴールが同じ場合にピンを少しずらす
       const distanceThreshold = 0.0005; // 緯度経度の差のしきい値（小さくするほど厳密）
 
-      const isClose = (start, end) => {
+      const isClose = (start: Coordinate, end: Coordinate): boolean => {
         const latDiff = Math.abs(start.lat - end.lat);
         const lngDiff = Math.abs(start.lng - end.lng);
         return latDiff < distanceThreshold && lngDiff < distanceThreshold;
@@ -53,6 +47,8 @@ export default function RouteMap({
           lat: end.lat + 0.0001, // 緯度をわずかに増やして調整
           lng: end.lng + 0.0001, // 経度をわずかに増やして調整
         });
+      } else {
+        setAdjustedEndMarker(null);
       }
     }
   }, [path]);
@@ -63,15 +59,17 @@ export default function RouteMap({
   return (
     <GoogleMap
       mapContainerStyle={containerStyle}
-      center={path.length > 0 ? path[0] : center}
+      center={center}
       zoom={17}
     >
-      <CustomMarker coordinate={startMarker} name="スタート" />
+      {startMarker && (
+        <CustomMarker coordinate={startMarker} name="スタート" />
+      )}
 
       {/* ゴール地点のピン */}
       {endMarker && (
         <CustomMarker
-          coordinate={adjustedEndMarker ? adjustedEndMarker : endMarker}
+          coordinate={adjustedEndMarker || endMarker}
           name="ゴール"
         />
       )}
@@ -87,6 +85,7 @@ export default function RouteMap({
           }}
         />
       )}
+      
       <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-10 bg-white p-2 rounded shadow">
         <strong>合計距離: {distance} km</strong>
       </div>

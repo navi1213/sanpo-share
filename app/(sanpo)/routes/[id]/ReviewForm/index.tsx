@@ -22,7 +22,13 @@ const formSchema = z.object({
   content: z.string().nonempty("レビューを入力してください"),
 });
 
-export default function ReviewForm({ params }: { params: { id: string } }) {
+interface ReviewFormProps {
+  params: { 
+    id: string;
+  };
+}
+
+export default function ReviewForm({ params }: ReviewFormProps) {
   const { data: session } = useSession();
   const { toast } = useToast();
   const router = useRouter();
@@ -35,20 +41,29 @@ export default function ReviewForm({ params }: { params: { id: string } }) {
 
   const handleSubmit = async (data: z.infer<typeof formSchema>) => {
     try {
-      await submitReview({
+      const result = await submitReview({
         content: data.content,
         routeId: params.id,
       });
-      toast({
-        className: "bg-green-500 text-white",
-        title: "レビューを投稿しました",
-      });
-      router.refresh(); // ページをリロード
-      formMethods.reset(); // フォームをリセット
-    } catch (error) {
+      
+      if (result?.error) {
+        toast({
+          title: "エラー",
+          description: result.message,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          className: "bg-green-500 text-white",
+          title: "レビューを投稿しました",
+        });
+        router.refresh(); // ページをリロード
+        formMethods.reset(); // フォームをリセット
+      }
+    } catch (error: unknown) {
       toast({
         title: "エラー",
-        description: error.message,
+        description: "レビューの投稿中にエラーが発生しました",
         variant: "destructive",
       });
     }
@@ -99,11 +114,9 @@ export default function ReviewForm({ params }: { params: { id: string } }) {
                     レビューを投稿するにはログインが必要です。
                   </p>
                   <Link href={`/login?redirect=routes/${params.id}`}>
-                  <Button
-                    className="mt-2 bg-blue-500 text-white px-4 py-2 rounded-md"
-                  >
-                    ログイン
-                  </Button>
+                    <Button className="mt-2 bg-blue-500 text-white px-4 py-2 rounded-md">
+                      ログイン
+                    </Button>
                   </Link>
                 </div>
               )}

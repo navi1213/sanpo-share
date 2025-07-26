@@ -3,8 +3,8 @@
 import { auth } from "@/auth";
 import db from "@/db/drizzle";
 import { users } from "@/db/usersSchema";
-import { passwordMatchSchema } from "@/validation/passwordMatchSchema";
-import { passwordSchema } from "@/validation/passwordSchema";
+import { passwordMatchSchema } from "@/validation/schemas";
+import { passwordSchema } from "@/validation/schemas";
 import { compare, hash } from "bcryptjs";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
@@ -25,6 +25,7 @@ export const changePassword = async ({
       message: "パスワードを変更するにはログインする必要があります。",
     };
   }
+  
   const formSchema = z
     .object({
       currentPassword: passwordSchema,
@@ -46,29 +47,42 @@ export const changePassword = async ({
     };
   }
 
-  const [user] = await db
-    .select()
-    .from(users)
-    .where(eq(users.id, parseInt(session.user.id)));
+  try {
+    const [user] = await db
+      .select()
+      .from(users)
+      .where(eq(users.id, parseInt(session.user.id)));
 
-  if(!user) {
-    return {
-        error:true,
-        message:"ユーザーが見つかりませんでした。"
+    if (!user) {
+      return {
+        error: true,
+        message: "ユーザーが見つかりませんでした。"
+      };
     }
-  }
-  const passwordMatch = await compare(currentPassword,user.password!);
+    
+    const passwordMatch = await compare(currentPassword, user.password!);
 
-  if(!passwordMatch) {
-    return {
-        error:true,
-        message:"現在のパスワードが間違っています。"
+    if (!passwordMatch) {
+      return {
+        error: true,
+        message: "現在のパスワードが間違っています。"
+      };
     }
+
+    const hashedPassword = await hash(password, 10);
+
+    await db.update(users).set({
+      password: hashedPassword
+    }).where(eq(users.id, parseInt(session.user.id)));
+
+    return {
+      success: true,
+      message: "パスワードが正常に変更されました。"
+    };
+  } catch (error) {
+    return {
+      error: true,
+      message: "パスワード変更中にエラーが発生しました。"
+    };
   }
-
-  const hashedPassword = await hash(password,10);
-
-  await db.update(users).set({
-    password:hashedPassword
-  }).where(eq(users.id, parseInt(session.user.id)));
 };

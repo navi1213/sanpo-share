@@ -5,18 +5,30 @@ import { users } from "./db/usersSchema";
 import { eq } from "drizzle-orm";
 import { compare } from "bcryptjs";
 import { authenticator } from "otplib";
+import { handleError, ErrorFactory, ERROR_MESSAGES } from "@/lib/errors";
+import { userLoginSchema } from "@/validation/schemas";
+import { SessionUser, AuthSession } from "@/types";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   callbacks: {
     jwt({ token, user }) {
       if (user) {
         token.id = user.id;
+        token.email = user.email;
+        // userオブジェクトがusernameプロパティを持つかチェック
+        token.username = (user as any).username || user.name || "";
       }
       return token;
     },
-    session({ session, token }) {
-      session.user.id = token.id as string;
-      return session;
+    session({ session, token }): AuthSession {
+      return {
+        user: {
+          id: token.id as string,
+          email: token.email as string | null,
+          username: token.username as string,
+        },
+        expires: session.expires,
+      };
     },
   },
   providers: [
@@ -26,40 +38,58 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         password: {},
         token: {},
       },
-      // ログインのロジックを定義
       async authorize(credentials) {
-        // テーブルで見つかった最初の要素を返すようにする
-        const [user] = await db
-          .select()
-          .from(users)
-          .where(eq(users.email, credentials.email as string));
-        // ユーザーが見つからなかった場合
-        if (!user) {
-          throw new Error("メールアドレスで登録されたアカウントが存在しません");
-        } else {
-          const passwordCorrect = await compare(
-            credentials.password as string,
-            user.password!
-          );
-          if (!passwordCorrect) {
-            throw new Error("メールアドレスまたはパスワードが間違っています");
-          }
-          if (user.twoFactorActivated) {
-            const tokenValid = authenticator.check(
-              credentials.token as string,
-              user.twoFactorSecret ?? ""
+        try {
+          // バリデーション
+          const validationResult = userLoginSchema.safeParse({
+            email: credentials.email,
+            password: credentials.password,
+            token: credentials.token,
+          });
+
+          if (!validationResult.success) {
+            throw ErrorFactory.validation(
+              validationResult.error.issues[0]?.message || ERROR_MESSAGES.VALIDATION.REQUIRED_FIELD
             );
+          }
+
+          const { email, password, token } = validationResult.data;
+
+          // ユーザー検索
+          const [user] = await db.select().from(users).where(eq(users.email, email));
+
+          if (!user) {
+            throw ErrorFactory.authentication(ERROR_MESSAGES.AUTHENTICATION.INVALID_CREDENTIALS);
+          }
+
+          // パスワード検証
+          const isPasswordCorrect = await compare(password, user.password);
+          if (!isPasswordCorrect) {
+            throw ErrorFactory.authentication(ERROR_MESSAGES.AUTHENTICATION.INVALID_CREDENTIALS);
+          }
+
+          // 2FA検証
+          if (user.twoFactorActivated) {
+            if (!token) {
+              throw ErrorFactory.authentication("ワンタイムパスワードが必要です");
+            }
+
+            const tokenValid = authenticator.check(token, user.twoFactorSecret ?? "");
             if (!tokenValid) {
-              throw new Error("ワンタイムパスワードが間違っています");
+              throw ErrorFactory.authentication(ERROR_MESSAGES.AUTHENTICATION.INVALID_TOKEN);
             }
           }
-        }
 
-        // 上のロジックを通ったらJWTトークンを構成するデータを返す
-        return {
-          id: user.id.toString(),
-          email: user.email,
-        };
+          // 認証成功
+          return {
+            id: user.id.toString(),
+            email: user.email,
+            username: user.username,
+          };
+        } catch (error) {
+          const appError = handleError(error);
+          throw new Error(appError.message);
+        }
       },
     }),
     Credentials({
@@ -67,21 +97,29 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       name: "Guest Login",
       credentials: {},
       async authorize() {
-        // ゲストユーザーをデータベースから取得
-        const [guestUser] = await db
-          .select()
-          .from(users)
-          .where(eq(users.email, "guest@example.com")); // 固定のゲストメール
-
-        if (!guestUser) {
-          throw new Error("ゲストユーザーが見つかりません。");
+        try {
+          // ゲストユーザーとして認証
+          return {
+            id: "guest",
+            email: null,
+            username: "ゲスト",
+          };
+        } catch (error) {
+          const appError = handleError(error);
+          throw new Error(appError.message);
         }
-
-        return {
-          id: guestUser.id.toString(),
-          email: guestUser.email,
-        };
       },
     }),
   ],
+  pages: {
+    signIn: "/login",
+    error: "/auth/error",
+  },
+  session: {
+    strategy: "jwt",
+    maxAge: 30 * 24 * 60 * 60, // 30 days
+  },
+  jwt: {
+    maxAge: 30 * 24 * 60 * 60, // 30 days
+  },
 });

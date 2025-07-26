@@ -1,8 +1,10 @@
 "use server";
+
 import db from "@/db/drizzle";
 import { hash } from "bcryptjs";
-import { users } from "@/db/schema";
-import { userSchema } from "@/validation/userSchema";
+import { users } from "@/db/usersSchema";
+import { userRegistrationSchema } from "@/validation/schemas";
+
 export const registerUser = async ({
   email,
   username,
@@ -14,29 +16,59 @@ export const registerUser = async ({
   password: string;
   passwordConfirm: string;
 }) => {
-  try {
-    const newUserSchema = userSchema;
+  console.log('=== registerUser 開始 ===');
+  console.log('registerUser: 受信データ', { email, username, password: '***', passwordConfirm: '***' });
+  console.log('registerUser: データ型確認', {
+    emailType: typeof email,
+    emailLength: email?.length,
+    emailValue: email,
+    emailEmpty: email === '',
+    emailUndefined: email === undefined,
+    emailNull: email === null,
+    usernameType: typeof username,
+    usernameLength: username?.length,
+    usernameValue: username
+  });
 
-    const newUserValidation = newUserSchema.safeParse({
+  try {
+    console.log('registerUser: バリデーション前のデータ準備');
+    const dataToValidate = {
       email,
       username,
       password,
-      passwordConfirm,
+      confirmPassword: passwordConfirm, // 注意: フィールド名を confirmPassword に変更
+    };
+    console.log('registerUser: バリデーション用データ', dataToValidate);
+
+    const newUserValidation = userRegistrationSchema.safeParse(dataToValidate);
+    
+    console.log('registerUser: バリデーション結果', {
+      success: newUserValidation.success,
+      error: newUserValidation.error?.issues || null
     });
+    
     if (!newUserValidation.success) {
+      console.log('registerUser: バリデーションエラー詳細', newUserValidation.error);
+      console.log('registerUser: エラーの最初の問題', newUserValidation.error.issues[0]);
       return {
         error: true,
         message:
           newUserValidation.error.issues[0]?.message ?? "エラーが発生しました",
       };
     }
+    
     const hashedPassword = await hash(password, 10);
+    
     await db.insert(users).values({
-      // @ts-expect-error: email, username, passwordは存在する
       email,
       username,
       password: hashedPassword,
     });
+
+    return {
+      success: true,
+      message: "ユーザー登録が完了しました。",
+    };
   } catch (e: unknown) {
     if (e instanceof Error) {
       // "code" プロパティがあるか確認
@@ -56,6 +88,7 @@ export const registerUser = async ({
         }
       }
     }
+    
     return {
       error: true,
       message: "エラーが発生しました",

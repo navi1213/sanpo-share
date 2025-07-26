@@ -1,8 +1,8 @@
 "use client";
-import { z } from "zod";
+
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { useState } from "react";
-import MapWithDrawing from "@/components/MapWithDrawing";
+import MapContainer from "@/components/Map/MapContainer";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Form,
@@ -14,67 +14,83 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { registerRoute } from "./actions"; // サーバー側処理をインポート
+import { registerRoute } from "./actions";
 import { useToast } from "@/hooks/use-toast";
 import { useForm } from "react-hook-form";
 import { Textarea } from "@/components/ui/textarea";
 import { useRouter } from "next/navigation";
-export default function New() {
-  const [coordinates, setCoordinates] = useState<
-    { lat: number; lng: number }[]
-  >([]);
-  const router = useRouter();
-  const [distance, setDistance] = useState(null);
-  const handleCoordinatesUpdate = (
-    newCoordinates: { lat: number; lng: number }[]
-  ) => {
-    setCoordinates(newCoordinates);
-  };
-  const { toast } = useToast();
-  const coordinateSchema = z.object({
-    lat: z.number().min(-90).max(90), // 緯度の範囲
-    lng: z.number().min(-180).max(180), // 経度の範囲
-  });
+import { routeCreateSchema, RouteCreateData } from "@/validation/schemas";
+import { Coordinate } from "@/types";
 
-  // フォームスキーマ全体
-  const formSchema = z.object({
-    name: z.string().min(1, "ルート名は必須です"),
-    description: z.string(),
-    location: z.string().min(1, "場所情報は必須です"),
-    path: z.array(coordinateSchema).min(1, "少なくとも1つの座標が必要です"),
-  });
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
+export default function New() {
+  const [coordinates, setCoordinates] = useState<Coordinate[]>([]);
+  const [distance, setDistance] = useState<string>("0");
+  const router = useRouter();
+  const { toast } = useToast();
+
+  const form = useForm<RouteCreateData>({
+    resolver: zodResolver(routeCreateSchema),
     defaultValues: {
       name: "",
       description: "",
       location: "",
-      path: coordinates.length > 0 ? coordinates : [{ lat: 0, lng: 0 }],
+      path: [],
+      distance: "0",
     },
   });
 
-  const handleSubmit = async (data: z.infer<typeof formSchema>) => {
-    // サーバー側にデータを送信
-    const response = await registerRoute({
-      name: data.name,
-      description: data.description,
-      location: data.location,
-      path: coordinates as { lat: number; lng: number }[],
-      distance,
-    });
-    if (response?.error) {
-      // エラー処理
-      form.setError("root", {
-        message: response.message,
+  const handleCoordinatesUpdate = (newCoordinates: Coordinate[]) => {
+    setCoordinates(newCoordinates);
+    form.setValue("path", newCoordinates);
+  };
+
+  const handleDistanceUpdate = (newDistance: string) => {
+    setDistance(newDistance);
+    form.setValue("distance", newDistance);
+  };
+
+  const handleSubmit = async (data: RouteCreateData) => {
+    try {
+      // デバッグ情報を出力
+      console.log('フォームデータ:', data);
+      console.log('座標:', coordinates);
+      console.log('距離:', distance);
+      console.log('フォームの状態:', form.formState);
+      console.log('エラー:', form.formState.errors);
+
+      const response = await registerRoute({
+        ...data,
+        path: coordinates,
+        distance,
       });
-    } else {
+
+      console.log('レスポンス:', response);
+
+      if (!response.success) {
+        toast({
+          title: "エラー",
+          description: response.error || "ルートの登録に失敗しました",
+          variant: "destructive",
+        });
+        return;
+      }
+
       toast({
-        title: "ルートの登録",
+        title: "成功",
         description: "散歩ルートが正常に登録されました",
-        className: "bg-green-500 text-white",
       });
+
       setCoordinates([]);
+      setDistance("0");
+      form.reset();
       router.push("/routes");
+    } catch (error) {
+      console.error('エラーの詳細:', error);
+      toast({
+        title: "エラー",
+        description: "予期しないエラーが発生しました",
+        variant: "destructive",
+      });
     }
   };
 
@@ -82,9 +98,9 @@ export default function New() {
     <div className="flex flex-col gap-4">
       {/* 地図エリア */}
       <div className="w-full h-[500px]">
-        <MapWithDrawing
+        <MapContainer
           onCoordinatesChange={handleCoordinatesUpdate}
-          onDistanceChange={setDistance}
+          onDistanceChange={handleDistanceUpdate}
           initialCoordinates={coordinates}
         />
       </div>
@@ -97,64 +113,83 @@ export default function New() {
           </CardHeader>
           <CardContent>
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(handleSubmit)}>
-                <fieldset
-                  className="flex flex-col gap-4"
-                  disabled={form.formState.isSubmitting}
-                >
-                  {/* ルート名 */}
-                  <FormField
-                    control={form.control}
-                    name="name"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>ルート名</FormLabel>
-                        <FormControl>
-                          <Input {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  {/* 説明 */}
-                  <FormField
-                    control={form.control}
-                    name="description"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>説明</FormLabel>
-                        <FormControl>
-                          <Textarea {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  {/* 場所情報 */}
-                  <FormField
-                    control={form.control}
-                    name="location"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>場所情報</FormLabel>
-                        <FormControl>
-                          <Input {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  {!!form.formState.errors.root?.message && (
-                    <FormMessage>
-                      {form.formState.errors.root?.message}
-                    </FormMessage>
+              <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>ルート名</FormLabel>
+                      <FormControl>
+                        <Input placeholder="散歩ルートの名前を入力" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
                   )}
+                />
 
-                  <Button type="submit">ルートを登録</Button>
-                </fieldset>
+                <FormField
+                  control={form.control}
+                  name="description"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>説明</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          placeholder="ルートの説明を入力（任意）"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="location"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>場所</FormLabel>
+                      <FormControl>
+                        <Input placeholder="場所を入力" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <div className="flex items-center gap-4">
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-gray-700">
+                      描画された距離: {distance} km
+                    </p>
+                    <p className="text-sm text-gray-500">
+                      座標数: {coordinates.length} 点
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex gap-2">
+                  <Button
+                    type="submit"
+                    disabled={coordinates.length === 0 || !form.formState.isValid}
+                    className="flex-1"
+                  >
+                    ルートを保存
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      setCoordinates([]);
+                      setDistance("0");
+                      form.reset();
+                    }}
+                  >
+                    リセット
+                  </Button>
+                </div>
               </form>
             </Form>
           </CardContent>

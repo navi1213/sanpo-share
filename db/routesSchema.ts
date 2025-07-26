@@ -10,6 +10,6 @@ export const routes = pgTable("routes", {
   distance: text("distance").notNull(),
   createdBy: text("user_name"),
   author: integer("user_id").references(() => users.id, {
-    onDelete: "cascade",
+    onDelete: "set null", // ユーザー削除時はnullに設定
   }),
 });
